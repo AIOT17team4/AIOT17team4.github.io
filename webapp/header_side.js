@@ -4,7 +4,7 @@ function header_side_append() {
         + '    <li><img src="icon/home.png" alt=""><a href="Home.html">'
         + '            <span>首頁</span>'
         + '        </a></li>'
-        + '    <li><img src="icon/introduction.png" alt=""><a href="Introduction.jsp"><span>dicar介紹</span></a></li>'
+        + '    <li><img src="icon/introduction.png" alt=""><a href="Introduction.html"><span>dicar介紹</span></a></li>'
         + '    <li><img src="icon/car.png" alt=""><a href="CarData.html"><span>貨櫃車系統</span></a></li>'
         + '    <li><img src="icon/storehouse.png" alt=""><a href="Storehouse.html"><span>倉儲系統</span></a></li>'
         + '    <li><img src="icon/error.png" alt=""><a href="ErrorList.html"><span>異常通報紀錄</span></a></li>'

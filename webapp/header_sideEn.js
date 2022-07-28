@@ -4,7 +4,7 @@ function header_side_append() {
         + '    <li><img src="icon/home.png" alt=""><a href="HomeEn.html">'
         + '            <span>Home</span>'
         + '        </a></li>'
-        + '    <li><img src="icon/introduction.png" alt=""><a href="Introduction.jsp"><span>dicar introduction</span></a></li>'
+        + '    <li><img src="icon/introduction.png" alt=""><a href="Introduction.html"><span>dicar introduction</span></a></li>'
         + '    <li><img src="icon/car.png" alt=""><a href="CarDataEn.html"><span>Car System</span></a></li>'
         + '    <li><img src="icon/storehouse.png" alt=""><a href="StorehouseEn.html"><span>Storehouse System</span></a></li>'
         + '    <li><img src="icon/error.png" alt=""><a href="ErrorListEn.html"><span>Error List</span></a></li>'
