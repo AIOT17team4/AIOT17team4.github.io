@@ -27,7 +27,7 @@ function header_side_append() {
         + '<li style="background-color: black;"><img style="height: 20px;" src="icon/menu.png" alt=""></li>'
         + '</ul>'
 
-        + '<div class="div_header">'
+        + '<div class="div_header d-none d-md-block">'
         + '<header>'
         + '    <span class="title"> <img class="img_dicar logo" src="dicarimg/dicar001.png"'
         + '            style="max-height: 95%; border-radius: 25px;" alt="">'
