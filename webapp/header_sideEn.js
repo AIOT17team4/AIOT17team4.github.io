@@ -39,7 +39,7 @@ function header_side_append() {
 }
 header_side_append()
 let user_information = [];
-user_information = ['<img src="head/head01.png" alt="">', '有貝爾來']
+user_information = ['<img src="head/head01.png" class="d-md-none d-lg-block" alt="">', '有貝爾來']
 function header_ul_append() {
     $(".header_ul").empty().append(
         "<li>" + user_information[0] + "</li><li>"
