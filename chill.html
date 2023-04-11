@@ -480,7 +480,7 @@
         todayPeople = []
         prepare_PK = [];
         empty_court_arr = [1, 2, 3, 4];
-        for (let i = 1; i <= 28; i++) {
+        for (let i = 1; i <= objArr.length; i++) {
             todayPeople.push({ id: i, name: objArr[i - 1].name, score: i * 30, court: 0, idleRounds: 0, player: 0 });
         }
         for (let i = 1; i < 6; i++) {
