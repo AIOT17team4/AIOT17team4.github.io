@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Bootstrap Table Example</title>
+    <title>和雲羽chill社 </title>
     <!-- 引入 Bootstrap 的 CSS 檔案 -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
@@ -76,6 +76,10 @@
             margin: 2px;
             border-radius: 3px;
         }
+
+        .json {
+            width: 100%;
+        }
     </style>
 </head>
 
@@ -83,14 +87,12 @@
     <div class="container">
         <div class="row court-container">
         </div>
-        <button class="primary" id="pickPeople"> 選人上場</button>
-        最小等待場數:<select name="min_idle" id="min_idle">
-            <option value="0">0</option>
-            <option value="1">1</option>
-        </select>
+
         <div class="row">
             <div class="col-4">
                 <h1>即將上場人員</h1>
+                <button class="primary" id="pickPeople"> 選人上場</button>
+                <button class="go_to_pk" id="go_to_pk">去？球場比賽</button>
                 <div class="col">
                     <table class="table table-bordered court-5 court">
                         <tr>
@@ -106,22 +108,10 @@
                             <td class="player3">2,2</td>
                         </tr>
                     </table>
-                    <button class="go_to_pk" id="go_to_pk">去？球場比賽</button>
                     <button class="button" id="check-info">檢視資料</button>
                     <button class="button" id="refresh-idle">刷新閒置人員資料</button>
                     <button class="button" id="save-data">存資料</button>
                     <button class="button" id="prepare_to_delete">準備設定人員 </button>
-                    <fieldset>
-                        <legend>idleRounds設定區</legend>
-                        <select name="idle_round_set" id="idle_round_set">
-                            <option value="50">超級回歸</option>
-                            <option value="0">回歸</option>
-                            <option value="-999">暫離</option>
-                        </select>
-                        <select name="idle_round_person" id="delete">
-                        </select>
-                        <button id="set_idle">確認執行</button>
-                    </fieldset>
                     <fieldset>
                         <legend>指定上場設定區</legend>
                         <select name="prepare_PK_set_player" id="prepare_PK_set_player">
@@ -134,6 +124,41 @@
                         </select>
                         <button id="set_prepare_PK">確認執行</button>
                     </fieldset>
+                    <fieldset>
+                        <legend>idleRounds設定區</legend>
+                        <select name="idle_round_set" id="idle_round_set">
+                            <option value="50">超級回歸</option>
+                            <option value="0">回歸</option>
+                            <option value="-999">暫離</option>
+                        </select>
+                        <select name="idle_round_person" id="delete">
+                        </select>
+                        <button id="set_idle">確認執行</button>
+                    </fieldset>
+                    <fieldset>
+                        <legend>環境變數設定區</legend>
+                        最小等待場數:<select name="min_idle" id="min_idle">
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                        </select>
+                        <select id="hide_score">
+                            <option value="1">隱藏分數</option>
+                            <option value="0">顯示分數</option>
+                        </select>
+                        <select id="score_count">
+                            <option value="0">固定100分</option>
+                            <option value="1">分差*10分</option>
+                            <option value="2">分差*20分</option>
+                        </select>
+                    </fieldset>
+                    <fieldset>
+                        <legend>個人戰績查詢</legend>
+                        <select name="personal_record" id="personal_record">
+                        </select>
+                        <button id="set_personal_record">確認執行</button>
+                        <button class="button" id="show_game_record">顯示所有比賽紀錄 </button>
+                    </fieldset>
+
 
 
                 </div>
@@ -145,10 +170,14 @@
                 <textarea id="input" rows="5"></textarea>
                 <!-- 按鈕 -->
                 <button onclick="processInput()">處理輸入</button>
-
+                <div id="all_data_area"></div>
             </div>
         </div>
-
+        <div class="row">
+            <div class="col">
+                <table id="game_record" class="table-bordered"></table>
+            </div>
+        </div>
 
     </div>
 
@@ -161,27 +190,28 @@
 </html>
 
 <script>
+    //這四個變數會寫入local storage
     let todayPeople = [];
     let prepare_PK = [];
     let empty_court_arr = [1, 2, 3, 4];
+    let game_record = [];
+    //這三個變數 每次進來會重置成這樣
     let min_idle = 0;
+    let hide_score = '1';
+    let score_count = '0';
+    //產生4個主要比賽場地
     for (let i = 1; i < 5; i++) {
         $(".court-container").append(court_generate(i))
     }
+    //從local storage 載入資料 若沒有資料則產生假資料
     if (!load_data()) {
         for (let i = 1; i <= 28; i++) {
             todayPeople.push({ id: i, name: `Object ${i}`, score: i * 30, court: 0, idleRounds: 0, player: 0 });
         }
     }
-    // todayPeople.sort(function (a, b) {
-    //     return a.score - b.score;
-    // });
-    console.log(todayPeople);
-
     function personal_card(person) {
-        return (`${person.name}<br>戰力：${person.score}`)
+        return (`${person.name}<br>戰力：${hide_score == 1 ? '???' : person.score}`)
     }
-
     function show_player_data_to_court(topTeamPlayers, bottomTeamPlayers, court) {
         //topTeamPlayers, bottomTeamPlayers 都是array 放了兩個選手的資料
         //court 是 int 表示第幾場次
@@ -202,7 +232,6 @@
         $(`.analysis-${court} .top`).empty()
         $(`.analysis-${court} .bottom`).empty()
     }
-
     function court_generate(court_number) {
         return (`<div class="col-sm">
                 <table class="table table-bordered court-${court_number} court">
@@ -240,7 +269,6 @@
                 </table>
             </div>`)
     }
-
     function auto_choose_players(allPlayers) {
         //將全部人員的資料輸入 
         //先找出不在場比賽的人
@@ -266,7 +294,6 @@
         combinedArray.sort((a, b) => b.score - a.score);
         return combinedArray
     }
-
     function pickPeople() {
         console.log(auto_choose_players(todayPeople))
         const pickedPeople = auto_choose_players(todayPeople)
@@ -274,7 +301,6 @@
         show_player_data_to_court([pickedPeople[0], pickedPeople[3]], [pickedPeople[1], pickedPeople[2]], 5)
 
     }
-
     function prepare_PK_refresh(pickedPeople) {
         prepare_PK = pickedPeople
     }
@@ -306,7 +332,6 @@
         }
 
     }
-
     function idle_people_update_to_div() {
         const idle_people = todayPeople.filter(obj => obj.court === 0)
         $(".person-wait").empty()
@@ -321,7 +346,7 @@
                 <td>${person.name}</td>
             </tr>
             <tr>
-                <td>${person.score}</td>
+                <td>${hide_score == 1 ? '???' : person.score}</td>
             </tr>
             <tr>
                 <td>${person.idleRounds}</td>
@@ -329,7 +354,6 @@
         </table> 
         `)
     }
-
     function handle_end_game(e) {
         const str = e.target.id;
         const sixthChar = str.charAt(5); // 取得第六個字 (從 0 開始算)
@@ -346,48 +370,58 @@
         }
 
     }
-
     function off_court(court_number, team_top_score, team_bottom_score) {
         const result = todayPeople.filter(obj => obj.court === court_number);
         result.forEach(obj => obj.court = 0)
         empty_data_to_court(court_number)
         empty_court_arr.push(Number(court_number))
-        const win = team_top_score.localeCompare(team_bottom_score, 'zh-Hans', { numeric: true });
-        console.log(win)
-        if (win == 1) {
-            result.forEach(obj => {
-                if (obj.player == 1 || obj.player == 4) {
-                    obj.score += 100
-                } else {
-                    obj.score -= 100
-                }
-            })
-        }
-        if (win == -1) {
-            result.forEach(obj => {
-                if (obj.player == 2 || obj.player == 3) {
-                    obj.score += 100
-                } else {
-                    obj.score -= 100
-                }
-            })
-        }
+        const win_point = Number(team_top_score) - Number(team_bottom_score)
+        console.log(win_point)
+        let temp_game_record = ['0', '1', '2', '3', '4', '5', '6']
+        result.forEach(obj => {
+            if (obj.player == 1 || obj.player == 4) {
+                obj.score += (score_count == 0 ? win_point > 0 ? 100 : -100 : score_count == 1 ? 10 * win_point : 20 * win_point)
+            } else {
+                obj.score -= (score_count == 0 ? win_point > 0 ? 100 : -100 : score_count == 1 ? 10 * win_point : 20 * win_point)
+            }
+            temp_game_record[Number(obj.player) - 1] = obj.name
+        })
+        temp_game_record[4] = team_top_score
+        temp_game_record[5] = team_bottom_score
+        temp_game_record[6] = new Date();
+        game_record.push(temp_game_record)
         idle_people_update_to_div()
     }
     function handle_check_info() {
         console.log(todayPeople)
         console.log(empty_court_arr)
         console.log(prepare_PK)
+        console.log(game_record)
+        const todayPeople_json = JSON.stringify(todayPeople);
+        const empty_court_arr_json = JSON.stringify(empty_court_arr);
+        const prepare_PK_json = JSON.stringify(prepare_PK);
+        const game_record_json = JSON.stringify(game_record);
+        $("#all_data_area").append(`<textarea id="todayPeople_data" class="json" >${todayPeople_json}</textarea>`)
+        $("#all_data_area").append(`<textarea id="empty_court_arr_data" class="json" >${empty_court_arr_json}</textarea>`)
+        $("#all_data_area").append(`<textarea id="prepare_PK_data" class="json" >${prepare_PK_json}</textarea>`)
+        $("#all_data_area").append(`<textarea id="game_record_data" class="json" >${game_record_json}</textarea>`)
+        $("#all_data_area").append(`非必要不要使用這個功能 格式錯就會GG喔`)
+        $("#all_data_area").append(`<button id="edit_save">儲存修改的資料 </button>`)
+        $("#all_data_area").append(`<button id="edit_off">退出編輯模式 </button>`)
+        $("#edit_save").on("click", handle_edit_save)
+        $("#edit_off").on("click", handle_edit_off)
     }
     function save_data() {
         // 將物件陣列轉換為 JSON 字串
         const todayPeople_json = JSON.stringify(todayPeople);
         const empty_court_arr_json = JSON.stringify(empty_court_arr);
         const prepare_PK_json = JSON.stringify(prepare_PK);
+        const game_record_json = JSON.stringify(game_record);
         // 將 JSON 字串存入本地存儲中
         localStorage.setItem('todayPeople', todayPeople_json);
         localStorage.setItem('empty_court_arr', empty_court_arr_json);
         localStorage.setItem('prepare_PK', prepare_PK_json);
+        localStorage.setItem('game_record', game_record_json);
     }
     function load_data() {
         if (localStorage.getItem('todayPeople') == undefined || localStorage.getItem('empty_court_arr') == undefined || localStorage.getItem('prepare_PK') == undefined) {
@@ -397,6 +431,7 @@
         todayPeople = JSON.parse(localStorage.getItem('todayPeople'));
         empty_court_arr = JSON.parse(localStorage.getItem('empty_court_arr'));
         prepare_PK = JSON.parse(localStorage.getItem('prepare_PK'));
+        game_record = JSON.parse(localStorage.getItem('game_record'));
         put_todayPeople_to_court()
         return true
     }
@@ -453,7 +488,6 @@
         }
         idle_people_update_to_div()
     }
-
     function prepare_to_delete() {
         $("#delete").empty()
         $("#prepare_PK_person").empty()
@@ -463,10 +497,63 @@
         for (i = 0; i < todayPeople.length; i++) {
             $("#prepare_PK_person").append(`<option value='${todayPeople[i].id}'>${todayPeople[i].name}</option>`)
         }
+        for (i = 0; i < todayPeople.length; i++) {
+            $("#personal_record").append(`<option value='${todayPeople[i].id}'>${todayPeople[i].name}</option>`)
+        }
 
     }
+    function handle_hide_score_change() {
+        console.log('將 hide_score 設置為：' + $(this).val())
+        hide_score = $(this).val()
+        put_todayPeople_to_court()
+        idle_people_update_to_div()
+    }
+    function handle_score_count_change() {
+        console.log('將 score_count 設置為：' + $(this).val())
+        score_count = $(this).val()
+    }
+    function handle_show_game_record() {
+        $("#game_record").empty()
+        for (x in game_record) {
+            let y = game_record.length - x - 1
+            $("#game_record").append(`
+            <tr><td>${game_record[y][0]}、${game_record[y][3]}</td><td>${game_record[y][1]}、${game_record[y][2]}</td></tr>
+            <tr><td>${game_record[y][4]}</td><td>${game_record[y][5]}</td></tr>
+            `)
+        }
+    }
+    function handle_set_personal_record() {
+        console.log($("#personal_record").val())
+        const the_name = todayPeople[Number($("#personal_record").val()) - 1].name
+        $("#game_record").empty()
+        for (x in game_record) {
+            let y = game_record.length - x - 1
+            if (game_record[y].includes(the_name))
+                $("#game_record").append(`
+                    <tr>
+                        <td>${game_record[y][0]}、${game_record[y][3]}</td>
+                        <td>${game_record[y][1]}、${game_record[y][2]}</td>
+                    </tr>
+                    <tr><td>${game_record[y][4]}</td><td>${game_record[y][5]}</td></tr>
+                `)
+        }
+    }
+    function handle_edit_save() {
+        const todayPeople_json = $("#todayPeople_data").val()
+        const empty_court_arr_json = $("#empty_court_arr_data").val()
+        const prepare_PK_json = $("#prepare_PK_data").val()
+        const game_record_json = $("#game_record_data").val()
+        // 將 JSON 字串存入本地存儲中
+        localStorage.setItem('todayPeople', todayPeople_json);
+        localStorage.setItem('empty_court_arr', empty_court_arr_json);
+        localStorage.setItem('prepare_PK', prepare_PK_json);
+        localStorage.setItem('game_record', game_record_json);
+        load_data()
+    }
+    function handle_edit_off() {
+        $("#all_data_area").empty()
+    }
     idle_people_update_to_div()
-
     $("#pickPeople").on("click", pickPeople)
     $("#go_to_pk").on("click", go_to_PK)
     $(".gameEnd").on("click", handle_end_game)
@@ -477,5 +564,11 @@
     $("#min_idle").on("change", set_min_idle)
     $('#set_idle').on("click", set_idle)
     $('#set_prepare_PK').on("click", set_prepare_PK)
+    $("#hide_score").on("change", handle_hide_score_change)
+    $("#score_count").on("change", handle_score_count_change)
+    $("#show_game_record").on('click', handle_show_game_record)
+    $("#set_personal_record").on('click', handle_set_personal_record)
+
+
 
 </script>
