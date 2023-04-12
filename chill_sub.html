@@ -93,8 +93,6 @@
         <div class="row">
             <div class="col-4">
                 <h1>即將上場人員</h1>
-                <button class="primary" id="pickPeople"> 選人上場</button>
-                <button class="go_to_pk" id="go_to_pk">去？球場比賽</button>
                 <div class="col">
                     <table class="table table-bordered court-5 court">
                         <tr>
@@ -110,51 +108,6 @@
                             <td class="player3">2,2</td>
                         </tr>
                     </table>
-                    <button class="button" id="check-info">檢視資料</button>
-                    <button class="button" id="refresh-idle">刷新閒置人員資料</button>
-                    <button class="button" id="save-data">存資料</button>
-                    <button class="button" id="prepare_to_delete">準備設定人員 </button>
-                    <button class="button" id="send_data">發送資料 </button>
-                    <fieldset>
-                        <legend>指定上場設定區</legend>
-                        <select name="prepare_PK_set_player" id="prepare_PK_set_player">
-                            <option value="1">player1(左上)</option>
-                            <option value="2">player2(左下)</option>
-                            <option value="3">player3(右下)</option>
-                            <option value="4">player4(右上)</option>
-                        </select>
-                        <select name="prepare_PK_person" id="prepare_PK_person">
-                        </select>
-                        <button id="set_prepare_PK">確認執行</button>
-                    </fieldset>
-                    <fieldset>
-                        <legend>idleRounds設定區</legend>
-                        <select name="idle_round_set" id="idle_round_set">
-                            <option value="50">超級回歸</option>
-                            <option value="0">回歸</option>
-                            <option value="-999">暫離</option>
-                        </select>
-                        <select name="idle_round_person" id="delete">
-                        </select>
-                        <button id="set_idle">確認執行</button>
-                    </fieldset>
-                    <fieldset>
-                        <legend>環境變數設定區</legend>
-                        最小等待場數:<select name="min_idle" id="min_idle">
-                            <option value="0">0</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                        </select>
-                        <select id="hide_score">
-                            <option value="1">隱藏分數</option>
-                            <option value="0">顯示分數</option>
-                        </select>
-                        <select id="score_count">
-                            <option value="0">固定100分</option>
-                            <option value="1">分差*10分</option>
-                            <option value="2">分差*20分</option>
-                        </select>
-                    </fieldset>
                     <fieldset>
                         <legend>個人戰績查詢</legend>
                         <select name="personal_record" id="personal_record">
@@ -162,19 +115,11 @@
                         <button id="set_personal_record">確認執行</button>
                         <button class="button" id="show_game_record">顯示所有比賽紀錄 </button>
                     </fieldset>
-
-
-
                 </div>
             </div>
             <div class="col-8">
                 <h1> 閒置人員</h1>
                 <div class="row person-wait"></div>
-                <!-- 多行文本輸入框 -->
-                <textarea id="input" rows="5"></textarea>
-                <!-- 按鈕 -->
-                <button onclick="processInput()">處理輸入</button>
-                <div id="all_data_area"></div>
             </div>
         </div>
         <div class="row">
@@ -263,12 +208,12 @@
                     <tr>
                         <td>上方</td>
                         <td class="top"></td>
-                        <td class="${court_number}-top-p"> <input style="width:80%"/></td>
+                        <td class="${court_number}-top-p"> <input disabled style="width:80%"/></td>
                     </tr>
                     <tr>
                         <td>下方</td>
                         <td class="bottom"></td>
-                        <td class="${court_number}-bottom-p"> <input style="width:80%"/></td>
+                        <td class="${court_number}-bottom-p"> <input disabled style="width:80%"/></td>
                     </tr>
                 </table>
             </div>`)
@@ -573,15 +518,31 @@
     $("#show_game_record").on('click', handle_show_game_record)
     $("#set_personal_record").on('click', handle_set_personal_record)
 
-    var client = mqtt.connect("ws://test.mosquitto.org:8080") // you add a ws:// url here
-
+    var client = mqtt.connect("ws://test.mosquitto.org:8080/") // you add a ws:// url here
     client.on('connect', () => {
         console.log('connected.');
+        client.subscribe('Try/MQTT/test')
+        client.subscribe('Try/MQTT/test2')
+        client.on("message", function (topic, payload) {
+            //   console.log(payload);
+            console.log(topic);
+            console.log(typeof (topic))
+            var uint8array = new TextEncoder().encode("¢");
+            var my_string = new TextDecoder().decode(payload);
+            // my_string = JSON.parse(my_string)
+            console.log(typeof (my_string))
+            console.log(my_string)
+            try {
+                todayPeople = JSON.parse(my_string);
+                console.log("flag")
+                console.log(todayPeople)
+                put_todayPeople_to_court()
+            } catch (error) {
 
-        $("#send_data").click(function () {
-            client.publish('Try/MQTT/test', JSON.stringify(todayPeople));
-        })
-        client.publish('Try/MQTT/test', "start");
+            }
+            // client.end()
+        });
+
+        // client.publish("mee", "hello",'Try/MQTT/test');    
     });
-
 </script>
