@@ -82,40 +82,49 @@
         .json {
             width: 100%;
         }
+
+        .gameEnd {
+            display: none;
+        }
+
+        .gameStart {
+            display: none;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
+        <div id="user_account" hidden>
+            <input type="text" id="user_name">
+            <button id="user_register">註冊</button>
+            <button id="user_login">登入</button>
+
+        </div>
         <div class="row court-container">
+            <div class="col">
+                <h1>即將上場</h1>
+                <table class="table table-bordered court-5 court">
+                    <tr>
+                        <td class="player1">1,1</td>
+                        <td class="player4">1,2</td>
+                    </tr>
+                    <tr>
+                        <td class='net'> </td>
+                        <td class='net'> </td>
+                    </tr>
+                    <tr>
+                        <td class="player2">2,1</td>
+                        <td class="player3">2,2</td>
+                    </tr>
+                </table>
+            </div>
         </div>
 
         <div class="row">
             <div class="col-4">
-                <h1>即將上場人員</h1>
-                <div class="col">
-                    <table class="table table-bordered court-5 court">
-                        <tr>
-                            <td class="player1">1,1</td>
-                            <td class="player4">1,2</td>
-                        </tr>
-                        <tr>
-                            <td class='net'> </td>
-                            <td class='net'> </td>
-                        </tr>
-                        <tr>
-                            <td class="player2">2,1</td>
-                            <td class="player3">2,2</td>
-                        </tr>
-                    </table>
-                    <fieldset>
-                        <legend>個人戰績查詢</legend>
-                        <select name="personal_record" id="personal_record">
-                        </select>
-                        <button id="set_personal_record">確認執行</button>
-                        <button class="button" id="show_game_record">顯示所有比賽紀錄 </button>
-                    </fieldset>
-                </div>
+                <h1>戰績表</h1>
+                <table id="game_record" class="table-bordered"></table>
             </div>
             <div class="col-8">
                 <h1> 閒置人員</h1>
@@ -182,7 +191,8 @@
         $(`.analysis-${court} .bottom`).empty()
     }
     function court_generate(court_number) {
-        return (`<div class="col-sm">
+        return (`<div class="col">
+            <h1>${court_number}號場地</h1>
                 <table class="table table-bordered court-${court_number} court">
                     <tr>
                         <td class="player1"></td>
@@ -385,13 +395,12 @@
         return true
     }
     function put_todayPeople_to_court() {
-        for (let court = 1; court < 6; court++) {
+        for (let court = 1; court < 5; court++) {
             const temp_arr = todayPeople.filter(obj => obj.court == court)
             if (temp_arr.length != 0) {
                 temp_arr.sort((a, b) => a.player - b.player);
                 show_player_data_to_court([temp_arr[0], temp_arr[3]], [temp_arr[1], temp_arr[2]], court)
             }
-
         }
     }
     function set_min_idle(e) {
@@ -521,23 +530,22 @@
     var client = mqtt.connect("wss://test.mosquitto.org:8081/") // you add a ws:// url here
     client.on('connect', () => {
         console.log('connected.');
-        client.subscribe('Try/MQTT/test')
-        client.subscribe('Try/MQTT/test2')
+        // client.subscribe('Try/MQTT/test')
+        client.subscribe('Chill/server/data_refresh')
+        // client.subscribe('Chill/#')
         client.on("message", function (topic, payload) {
-            //   console.log(payload);
-            console.log(topic);
-            console.log(typeof (topic))
-            var uint8array = new TextEncoder().encode("¢");
             var my_string = new TextDecoder().decode(payload);
-            // my_string = JSON.parse(my_string)
-            console.log(typeof (my_string))
-            console.log(my_string)
-            try {
-                todayPeople = JSON.parse(my_string);
-                console.log("flag")
-                console.log(todayPeople)
+            if (topic == 'Chill/server/data_refresh') {
+                const data_obj = JSON.parse(my_string);
+                todayPeople = data_obj.todayPeople;
+                game_record = data_obj.game_record;
+                prepare_PK = data_obj.prepare_PK;
                 put_todayPeople_to_court()
-            } catch (error) {
+                idle_people_update_to_div()
+                handle_show_game_record()
+                if (prepare_PK.length == 4) {
+                    show_player_data_to_court([prepare_PK[0], prepare_PK[3]], [prepare_PK[1], prepare_PK[2]], 5)
+                }
 
             }
             // client.end()
@@ -545,4 +553,5 @@
 
         // client.publish("mee", "hello",'Try/MQTT/test');    
     });
+
 </script>

@@ -20,7 +20,7 @@
 
         .court td {
             /* margin-top: 10px; */
-            height: 20vh;
+            height: 120px;
         }
 
         .court .net {
@@ -579,9 +579,45 @@
         console.log('connected.');
 
         $("#send_data").click(function () {
-            client.publish('Try/MQTT/test', JSON.stringify(todayPeople));
+            const data_obj = { todayPeople: todayPeople, game_record: game_record, prepare_PK: prepare_PK }
+            client.publish('Chill/server/data_refresh', JSON.stringify(data_obj));
         })
-        client.publish('Try/MQTT/test', "start");
+        client.publish('Chill/test', "start");
+        client.subscribe('Chill/#')
+        client.on("message", function (topic, payload) {
+            //   console.log(payload);
+            console.log(topic);
+            // var uint8array = new TextEncoder().encode("¢");
+            var my_string = new TextDecoder().decode(payload);
+
+            if (topic == 'Chill/client/register_personal_data') {
+                const personal_data_obj = JSON.parse(my_string)
+                console.log(personal_data_obj)
+                if (todayPeople.filter(obj => obj.name == personal_data_obj.name).length == 0) {
+                    todayPeople.push({ id: todayPeople.length, name: `${personal_data_obj.name}`, score: 500, court: 0, idleRounds: 0, player: 0 });
+                    put_todayPeople_to_court();
+                    idle_people_update_to_div();
+                    const return_obj = { success: '1', message: `您使用 ${personal_data_obj.name} 註冊成功`, name: personal_data_obj.name }
+                    client.publish('Chill/server/register', JSON.stringify(return_obj));
+                } else {
+                    const return_obj = { success: '0', message: `您使用 ${personal_data_obj.name} 註冊失敗，已經有這個名字了！`, name: personal_data_obj.name }
+                    client.publish('Chill/server/register', JSON.stringify(return_obj));
+                }
+            }
+
+            // my_string = JSON.parse(my_string)
+            // console.log(typeof (my_string))
+            // console.log(my_string)
+            // try {
+            //     todayPeople = JSON.parse(my_string);
+            //     console.log("flag")
+            //     console.log(todayPeople)
+            //     put_todayPeople_to_court()
+            // } catch (error) {
+
+            // }
+            // client.end()
+        });
     });
 
 </script>
