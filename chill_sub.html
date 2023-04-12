@@ -518,7 +518,7 @@
     $("#show_game_record").on('click', handle_show_game_record)
     $("#set_personal_record").on('click', handle_set_personal_record)
 
-    var client = mqtt.connect("ws://test.mosquitto.org:8080/") // you add a ws:// url here
+    var client = mqtt.connect("wss://test.mosquitto.org:8081/") // you add a ws:// url here
     client.on('connect', () => {
         console.log('connected.');
         client.subscribe('Try/MQTT/test')
