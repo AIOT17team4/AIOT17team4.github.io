@@ -604,6 +604,10 @@
                     client.publish('Chill/server/register', JSON.stringify(return_obj));
                 }
             }
+            if (topic == 'Chill/client/ask_for_data_refresh') {
+                const data_obj = { todayPeople: todayPeople, game_record: game_record, prepare_PK: prepare_PK }
+                client.publish('Chill/server/data_refresh', JSON.stringify(data_obj));
+            }
 
             // my_string = JSON.parse(my_string)
             // console.log(typeof (my_string))

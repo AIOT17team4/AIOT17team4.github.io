@@ -20,7 +20,7 @@
 
         .court td {
             /* margin-top: 10px; */
-            height: 20vh;
+            height: 120px;
         }
 
         .court .net {
@@ -54,6 +54,7 @@
         }
 
         .court-1 {
+            /* background-color: lightgreen; */
             background-color: lightcoral;
         }
 
@@ -62,10 +63,12 @@
         }
 
         .court-3 {
+            /* background-color: lightgreen; */
             background-color: lightblue;
         }
 
         .court-4 {
+            /* background-color: lightgreen; */
             background-color: lightyellow;
         }
 
@@ -102,7 +105,7 @@
 
         </div>
         <div class="row court-container">
-            <div class="col">
+            <div class="col-2">
                 <h1>即將上場</h1>
                 <table class="table table-bordered court-5 court">
                     <tr>
@@ -161,6 +164,7 @@
     for (let i = 1; i < 5; i++) {
         $(".court-container").append(court_generate(i))
     }
+    $(".court-container").append(`<div class='col-2'><h1>我<br>是<br>講<br>台</h1><div>`)
     //從local storage 載入資料 若沒有資料則產生假資料
     if (!load_data()) {
         for (let i = 1; i <= 28; i++) {
@@ -179,8 +183,8 @@
         $(`.court-${court} .player2`).html(personal_card(bottomTeamPlayers[0]))
         $(`.court-${court} .player3`).html(personal_card(bottomTeamPlayers[1]))
         $(`.court-${court} .player4`).html(personal_card(topTeamPlayers[1]))
-        $(`.analysis-${court} .top`).html(`${topTeamPlayers[0].score + topTeamPlayers[1].score}`)
-        $(`.analysis-${court} .bottom`).html(`${bottomTeamPlayers[0].score + bottomTeamPlayers[1].score}`)
+        $(`.net-left-${court}`).html(`↑：${topTeamPlayers[0].score + topTeamPlayers[1].score}`)
+        $(`.net-right-${court}`).html(`↓：${bottomTeamPlayers[0].score + bottomTeamPlayers[1].score}`)
     }
     function empty_data_to_court(court) {
         $(`.court-${court} .player1`).empty()
@@ -191,7 +195,7 @@
         $(`.analysis-${court} .bottom`).empty()
     }
     function court_generate(court_number) {
-        return (`<div class="col">
+        return (`<div class="col-2">
             <h1>${court_number}號場地</h1>
                 <table class="table table-bordered court-${court_number} court">
                     <tr>
@@ -199,33 +203,15 @@
                         <td class="player4"></td>
                     </tr>
                     <tr>
-                        <td class='net'> </td>
-                        <td class='net'> </td>
+                        <td class='net net-left-${court_number}'> </td>
+                        <td class='net net-right-${court_number}'> </td>
                     </tr>
                     <tr>
                         <td class="player2"></td>
                         <td class="player3"></td>
                     </tr>
                 </table>
-                <button class="gameStart" id="court${court_number}start">比賽開始</button>
-                <button class="gameEnd" id="court${court_number}end">比賽結束</button>
-                <table class="analysis-${court_number} analysis" style="width:100%; table-layout:fixed;">
-                    <tr>
-                        <th>戰鬥分析</th>
-                        <th>戰力指數</th>
-                        <th>實際比分</th>
-                    </tr>
-                    <tr>
-                        <td>上方</td>
-                        <td class="top"></td>
-                        <td class="${court_number}-top-p"> <input disabled style="width:80%"/></td>
-                    </tr>
-                    <tr>
-                        <td>下方</td>
-                        <td class="bottom"></td>
-                        <td class="${court_number}-bottom-p"> <input disabled style="width:80%"/></td>
-                    </tr>
-                </table>
+                
             </div>`)
     }
     function auto_choose_players(allPlayers) {
@@ -550,6 +536,7 @@
             }
             // client.end()
         });
+        client.publish('Chill/client/ask_for_data_refresh', 'new connect need data refresh')
 
         // client.publish("mee", "hello",'Try/MQTT/test');    
     });
