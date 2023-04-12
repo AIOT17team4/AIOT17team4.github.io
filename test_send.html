@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>網頁1</title>
+</head>
+
+<body>
+    <h1>網頁1</h1>
+    <button onclick="send()">發送消息</button>
+    <script>
+        function send() {
+            const targetOrigin = 'https://aiot17team4.github.io/test_received.html'
+            const message = 'Hello, world!'; // 需要發送的消息
+            window.opener.postMessage(message, targetOrigin); // 向目標網頁發送消息
+        }
+    </script>
+</body>
+
+</html>
