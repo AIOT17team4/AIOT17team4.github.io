@@ -9,6 +9,21 @@
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+        #message-box {
+            position: fixed;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: yellow;
+            border: 1px solid black;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 9999;
+            display: none;
+        }
+
         .court {
             background-color: rgb(236, 236, 244);
             border: 2px solid white;
@@ -86,6 +101,7 @@
 </head>
 
 <body>
+    <div id="message-box">這是一個提示！</div>
     <div class="container">
         <div class="row court-container">
         </div>
@@ -126,6 +142,14 @@
                         <select name="prepare_PK_person" id="prepare_PK_person">
                         </select>
                         <button id="set_prepare_PK">確認執行</button>
+                    </fieldset>
+                    <fieldset>
+                        <legend>綁定組合區</legend>
+                        <select name="binding_partners_1" id="binding_partners_1">
+                        </select>
+                        <select name="binding_partners_2" id="binding_partners_2">
+                        </select>
+                        <button id="set_binding">確認執行</button>
                     </fieldset>
                     <fieldset>
                         <legend>idleRounds設定區</legend>
@@ -199,6 +223,8 @@
     let prepare_PK = [];
     let empty_court_arr = [1, 2, 3, 4];
     let game_record = [];
+    //測試
+    let binding_partners = []
     //這三個變數 每次進來會重置成這樣
     let min_idle = 0;
     let hide_score = '1';
@@ -210,8 +236,22 @@
     //從local storage 載入資料 若沒有資料則產生假資料
     if (!load_data()) {
         for (let i = 1; i <= 28; i++) {
-            todayPeople.push({ id: i, name: `Object ${i}`, score: 500 - i, court: 0, idleRounds: 0, player: 0 });
+            todayPeople.push({ id: i, name: `Object ${i}`, score: 500 - i, court: 0, idleRounds: 0, player: 0, partner_id: 0 });
         }
+    }
+    function show_message(message) {
+        // 獲取message-box元素
+        const messageBox = document.getElementById("message-box");
+        // 設置訊息內容
+        messageBox.innerHTML = message;
+        // 顯示message-box元素
+        messageBox.style.display = "block";
+        // 設置定時器
+        setTimeout(function () {
+            // 隱藏message-box元素
+            messageBox.style.display = "none";
+        }, 2000);
+
     }
     function personal_card(person) {
         return (`${person.name}<br>戰力：${hide_score == 1 ? '???' : person.score}`)
@@ -281,25 +321,56 @@
         const oldestPerson = result.reduce((prev, current) => {
             return (prev.idleRounds > current.idleRounds) ? prev : current;
         });
-        // 找出和這個人 score 最接近的其他三人
-        let otherPeople = result.filter(person => person.name !== oldestPerson.name && person.idleRounds >= min_idle);
-        if (otherPeople.length < 3) {
-            otherPeople = result.filter(person => person.name !== oldestPerson.name && person.idleRounds >= 0);
+        let top_team = []
+        //為等最久的人 配對 他的隊友 若有夫妻檔直接組隊 沒有則找最接近的
+        if (oldestPerson.partner_id == 0) {
+            // 找出和這個人 score 最接近的其他1人 要是單身  
+            let otherPeople = result.filter(person => person.name !== oldestPerson.name && person.idleRounds >= min_idle && person.partner_id == 0);
+            if (otherPeople.length < 3) {
+                otherPeople = result.filter(person => person.name !== oldestPerson.name && person.idleRounds >= 0 && person.partner_id == 0);
+            }
+            otherPeople.sort((a, b) => {
+                const diffA = Math.abs(a.score - oldestPerson.score);
+                const diffB = Math.abs(b.score - oldestPerson.score);
+                return diffA - diffB;
+            });
+            const closestPerson = otherPeople.slice(0, 1);
+            top_team = [oldestPerson, closestPerson[0]]
+        } else {
+            top_team = [oldestPerson, todayPeople[oldestPerson.partner_id - 1]]
         }
-        otherPeople.sort((a, b) => {
-            const diffA = Math.abs(a.score - oldestPerson.score);
-            const diffB = Math.abs(b.score - oldestPerson.score);
-            return diffA - diffB;
+        // 找出和這組 實力接近的隊伍
+        console.log(top_team)
+        let otherPeople = result.filter(person => person.name !== top_team[0].name && person.name !== top_team[1].name && person.idleRounds >= min_idle);
+        if (otherPeople.length < 3) {
+            otherPeople = result.filter(person => person.name !== top_team[0].name && person.name !== top_team[1].name && person.idleRounds >= 0);
+        }
+        let partner_team = []
+        otherPeople.forEach(obj => {
+            if (obj.partner_id != 0) {
+                partner_team.push([obj, todayPeople[obj.partner_id - 1]])
+            }
         });
-        const closestPeople = otherPeople.slice(0, 3);
+        let other_single_people = otherPeople.filter(obj => obj.partner_id == 0)
+        other_single_people.sort((a, b) => b.score - a.score)
+        for (let x = 0; x < other_single_people.length - 1; x++) {
+            partner_team.push([other_single_people[x], other_single_people[x + 1]])
+        }
+        partner_team.sort((a, b) => {
+            const diffA = Math.abs(a[0].score + a[1].score - top_team[0].score - top_team[1].score);
+            const diffB = Math.abs(b[0].score + b[1].score - top_team[0].score - top_team[1].score);
+            return diffA - diffB;
+        })
         // 重組陣列
-        const combinedArray = [oldestPerson, ...closestPeople];
-        // 按照分數高低排序
-        combinedArray.sort((a, b) => b.score - a.score);
+        // const combinedArray = [oldestPerson, ...closestPeople];
+        // // 按照分數高低排序
+        // combinedArray.sort((a, b) => b.score - a.score);
+        combinedArray = [top_team[0], partner_team[0][0], partner_team[0][1], top_team[1]]
+        console.log(combinedArray)
         return combinedArray
     }
     function pickPeople() {
-        console.log(auto_choose_players(todayPeople))
+        // console.log(auto_choose_players(todayPeople))
         const pickedPeople = auto_choose_players(todayPeople)
         prepare_PK_refresh(pickedPeople)
         show_player_data_to_court([pickedPeople[0], pickedPeople[3]], [pickedPeople[1], pickedPeople[2]], 5)
@@ -355,7 +426,11 @@
             <tr>
                 <td>${person.idleRounds}</td>
             </tr>
-        </table> 
+            <tr>
+                <td>${person.partner_id == 0 ? '單身狗' : '隊友：' + todayPeople[person.partner_id - 1].name
+            }</td >
+            </tr >
+        </table >
         `)
     }
     function handle_end_game(e) {
@@ -405,13 +480,13 @@
         const empty_court_arr_json = JSON.stringify(empty_court_arr);
         const prepare_PK_json = JSON.stringify(prepare_PK);
         const game_record_json = JSON.stringify(game_record);
-        $("#all_data_area").append(`<textarea id="todayPeople_data" class="json" >${todayPeople_json}</textarea>`)
-        $("#all_data_area").append(`<textarea id="empty_court_arr_data" class="json" >${empty_court_arr_json}</textarea>`)
-        $("#all_data_area").append(`<textarea id="prepare_PK_data" class="json" >${prepare_PK_json}</textarea>`)
-        $("#all_data_area").append(`<textarea id="game_record_data" class="json" >${game_record_json}</textarea>`)
+        $("#all_data_area").append(`<textarea id = "todayPeople_data" class="json" > ${todayPeople_json}</textarea > `)
+        $("#all_data_area").append(`<textarea id = "empty_court_arr_data" class="json" > ${empty_court_arr_json}</textarea > `)
+        $("#all_data_area").append(`<textarea id = "prepare_PK_data" class="json" > ${prepare_PK_json}</textarea > `)
+        $("#all_data_area").append(`<textarea id = "game_record_data" class="json" > ${game_record_json}</textarea > `)
         $("#all_data_area").append(`非必要不要使用這個功能 格式錯就會GG喔`)
-        $("#all_data_area").append(`<button id="edit_save">儲存修改的資料 </button>`)
-        $("#all_data_area").append(`<button id="edit_off">退出編輯模式 </button>`)
+        $("#all_data_area").append(`<button id = "edit_save" > 儲存修改的資料 </button > `)
+        $("#all_data_area").append(`<button id = "edit_off" > 退出編輯模式 </button > `)
         $("#edit_save").on("click", handle_edit_save)
         $("#edit_off").on("click", handle_edit_off)
     }
@@ -485,7 +560,7 @@
         prepare_PK = [];
         empty_court_arr = [1, 2, 3, 4];
         for (let i = 1; i <= objArr.length; i++) {
-            todayPeople.push({ id: i, name: objArr[i - 1].name, score: 500 - i, court: 0, idleRounds: 0, player: 0 });
+            todayPeople.push({ id: i, name: objArr[i - 1].name, score: 500 - i, court: 0, idleRounds: 0, player: 0, partner_id: 0 });
         }
         for (let i = 1; i < 6; i++) {
             empty_data_to_court(i)
@@ -496,13 +571,15 @@
         $("#delete").empty()
         $("#prepare_PK_person").empty()
         for (i = 0; i < todayPeople.length; i++) {
-            $("#delete").append(`<option value='${todayPeople[i].id}'>${todayPeople[i].name}</option>`)
+            $("#delete").append(`<option value = '${todayPeople[i].id}' > ${todayPeople[i].name}</option > `)
         }
         for (i = 0; i < todayPeople.length; i++) {
-            $("#prepare_PK_person").append(`<option value='${todayPeople[i].id}'>${todayPeople[i].name}</option>`)
+            $("#prepare_PK_person").append(`<option value = '${todayPeople[i].id}' > ${todayPeople[i].name}</option > `)
         }
         for (i = 0; i < todayPeople.length; i++) {
-            $("#personal_record").append(`<option value='${todayPeople[i].id}'>${todayPeople[i].name}</option>`)
+            $("#personal_record").append(`<option value = '${todayPeople[i].id}' > ${todayPeople[i].name}</option > `)
+            $("#binding_partners_2").append(`<option value = '${todayPeople[i].id}' > ${todayPeople[i].name}</option > `)
+            $("#binding_partners_1").append(`<option value = '${todayPeople[i].id}' > ${todayPeople[i].name}</option > `)
         }
 
     }
@@ -521,9 +598,9 @@
         for (x in game_record) {
             let y = game_record.length - x - 1
             $("#game_record").append(`
-            <tr><td>${game_record[y][0]}、${game_record[y][3]}</td><td>${game_record[y][1]}、${game_record[y][2]}</td></tr>
+        <tr ><td>${game_record[y][0]}、${game_record[y][3]}</td><td>${game_record[y][1]}、${game_record[y][2]}</td></tr >
             <tr><td>${game_record[y][4]}</td><td>${game_record[y][5]}</td></tr>
-            `)
+    `)
         }
     }
     function handle_set_personal_record() {
@@ -534,12 +611,12 @@
             let y = game_record.length - x - 1
             if (game_record[y].includes(the_name))
                 $("#game_record").append(`
-                    <tr>
+        <tr >
                         <td>${game_record[y][0]}、${game_record[y][3]}</td>
                         <td>${game_record[y][1]}、${game_record[y][2]}</td>
-                    </tr>
-                    <tr><td>${game_record[y][4]}</td><td>${game_record[y][5]}</td></tr>
-                `)
+                    </tr >
+        <tr><td>${game_record[y][4]}</td><td>${game_record[y][5]}</td></tr>
+    `)
         }
     }
     function handle_edit_save() {
@@ -557,6 +634,23 @@
     function handle_edit_off() {
         $("#all_data_area").empty()
     }
+    function handle_set_binding() {
+        const binding_1 = Number($("#binding_partners_1").val())
+        const binding_2 = Number($("#binding_partners_2").val())
+        if (binding_1 == binding_2) {
+            return (alert("需要不同的兩個人才能綁定"))
+        }
+        if (todayPeople[binding_1 - 1].partner_id != 0) {
+            return (alert("需要先解除第一個選擇的人的綁定"))
+        }
+        if (todayPeople[binding_2 - 1].partner_id != 0) {
+            return (alert("需要先解除第二個選擇的人的綁定"))
+        }
+        todayPeople[binding_1 - 1].partner_id = binding_2;
+        todayPeople[binding_2 - 1].partner_id = binding_1;
+        show_message(`${todayPeople[binding_1 - 1].name} 與 ${todayPeople[binding_2 - 1].name} 成功綁定`)
+        idle_people_update_to_div()
+    }
     idle_people_update_to_div()
     $("#pickPeople").on("click", pickPeople)
     $("#go_to_pk").on("click", go_to_PK)
@@ -572,6 +666,9 @@
     $("#score_count").on("change", handle_score_count_change)
     $("#show_game_record").on('click', handle_show_game_record)
     $("#set_personal_record").on('click', handle_set_personal_record)
+    $("#set_personal_record").on('click', handle_set_personal_record)
+    $("#set_binding").on('click', handle_set_binding)
+
 
     var client = mqtt.connect("wss://test.mosquitto.org:8081") // you add a ws:// url here
 
@@ -594,7 +691,7 @@
                 const personal_data_obj = JSON.parse(my_string)
                 console.log(personal_data_obj)
                 if (todayPeople.filter(obj => obj.name == personal_data_obj.name).length == 0) {
-                    todayPeople.push({ id: todayPeople.length, name: `${personal_data_obj.name}`, score: 500, court: 0, idleRounds: 0, player: 0 });
+                    todayPeople.push({ id: todayPeople.length, name: `${personal_data_obj.name} `, score: 500, court: 0, idleRounds: 0, player: 0, partner_id: 0 });
                     put_todayPeople_to_court();
                     idle_people_update_to_div();
                     const return_obj = { success: '1', message: `您使用 ${personal_data_obj.name} 註冊成功`, name: personal_data_obj.name }
@@ -608,19 +705,6 @@
                 const data_obj = { todayPeople: todayPeople, game_record: game_record, prepare_PK: prepare_PK }
                 client.publish('Chill/server/data_refresh', JSON.stringify(data_obj));
             }
-
-            // my_string = JSON.parse(my_string)
-            // console.log(typeof (my_string))
-            // console.log(my_string)
-            // try {
-            //     todayPeople = JSON.parse(my_string);
-            //     console.log("flag")
-            //     console.log(todayPeople)
-            //     put_todayPeople_to_court()
-            // } catch (error) {
-
-            // }
-            // client.end()
         });
     });
 
