@@ -173,7 +173,7 @@
     //從local storage 載入資料 若沒有資料則產生假資料
     if (!load_data()) {
         for (let i = 1; i <= 28; i++) {
-            todayPeople.push({ id: i, name: `Object ${i}`, score: 500 - i, court: 0, idleRounds: 0, player: 0 });
+            todayPeople.push({ id: i, name: `Object ${i}`, score: 500 - i, court: 0, idleRounds: 0, player: 0, partner_id: 0 });
         }
     }
     function personal_card(person) {
