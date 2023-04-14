@@ -186,9 +186,6 @@
                         <button id="set_personal_record">確認執行</button>
                         <button class="button" id="show_game_record">顯示所有比賽紀錄 </button>
                     </fieldset>
-
-
-
                 </div>
             </div>
             <div class="col-8">
@@ -199,6 +196,10 @@
                 <!-- 按鈕 -->
                 <button onclick="processInput()">處理輸入</button>
                 <div id="all_data_area"></div>
+                <div id="bulletin_board">
+                    <h1>📰公布欄📰</h1>
+                    <div id="bulletin_board_message"></div>
+                </div>
             </div>
         </div>
         <div class="row">
@@ -223,8 +224,7 @@
     let prepare_PK = [];
     let empty_court_arr = [1, 2, 3, 4];
     let game_record = [];
-    //測試
-    let binding_partners = []
+    let bulletin_board_message = []
     //這三個變數 每次進來會重置成這樣
     let min_idle = 0;
     let hide_score = '1';
@@ -254,7 +254,7 @@
 
     }
     function personal_card(person) {
-        return (`${person.name}<br>戰力：${hide_score == 1 ? '???' : person.score}`)
+        return (`${person.name}<br>⚔️：${hide_score == 1 ? '???' : person.score}`)
     }
     function show_player_data_to_court(topTeamPlayers, bottomTeamPlayers, court) {
         //topTeamPlayers, bottomTeamPlayers 都是array 放了兩個選手的資料
@@ -393,7 +393,17 @@
                 person.player = index + 1
             });
             show_player_data_to_court([prepare_PK[0], prepare_PK[3]], [prepare_PK[1], prepare_PK[2]], court)
-            empty_court_arr.shift()
+            const now = new Date();
+            const timezoneOffsetInMs = now.getTimezoneOffset() * 60 * 1000;
+            const currentTimeInMs = now.getTime() - timezoneOffsetInMs;
+            const currentTime = new Date(currentTimeInMs);
+            const hours = currentTime.getHours().toString().padStart(2, '0');
+            const minutes = currentTime.getMinutes().toString().padStart(2, '0');
+            const seconds = currentTime.getSeconds().toString().padStart(2, '0');
+            const currentTime_hms = `${hours}:${minutes}:${seconds}`
+            const PK_court = empty_court_arr.shift()
+            bulletin_board_message.push(`《${prepare_PK[0].name}》 和 《${prepare_PK[3].name}》 VS 《${prepare_PK[1].name}》 和 《${prepare_PK[2].name}》，請至第${PK_court}球場比賽。 [ ${currentTime_hms} ]<br>`)
+            refresh_bulletin_board_message()
             prepare_PK = [];
             empty_data_to_court(5)
             todayPeople.forEach(person => {
@@ -404,8 +414,13 @@
                 }
             })
             idle_people_update_to_div()
+
         }
 
+    }
+    function refresh_bulletin_board_message() {
+        $("#bulletin_board_message").empty()
+        bulletin_board_message.forEach(obj => $("#bulletin_board_message").prepend(obj))
     }
     function idle_people_update_to_div() {
         const idle_people = todayPeople.filter(obj => obj.court === 0)
@@ -480,10 +495,12 @@
         const empty_court_arr_json = JSON.stringify(empty_court_arr);
         const prepare_PK_json = JSON.stringify(prepare_PK);
         const game_record_json = JSON.stringify(game_record);
+        const bulletin_board_message_json = JSON.stringify(bulletin_board_message);
         $("#all_data_area").append(`<textarea id = "todayPeople_data" class="json" > ${todayPeople_json}</textarea > `)
         $("#all_data_area").append(`<textarea id = "empty_court_arr_data" class="json" > ${empty_court_arr_json}</textarea > `)
         $("#all_data_area").append(`<textarea id = "prepare_PK_data" class="json" > ${prepare_PK_json}</textarea > `)
         $("#all_data_area").append(`<textarea id = "game_record_data" class="json" > ${game_record_json}</textarea > `)
+        $("#all_data_area").append(`<textarea id = "game_record_data" class="json" > ${bulletin_board_message_json}</textarea > `)
         $("#all_data_area").append(`非必要不要使用這個功能 格式錯就會GG喔`)
         $("#all_data_area").append(`<button id = "edit_save" > 儲存修改的資料 </button > `)
         $("#all_data_area").append(`<button id = "edit_off" > 退出編輯模式 </button > `)
@@ -496,11 +513,13 @@
         const empty_court_arr_json = JSON.stringify(empty_court_arr);
         const prepare_PK_json = JSON.stringify(prepare_PK);
         const game_record_json = JSON.stringify(game_record);
+        const bulletin_board_message_json = JSON.stringify(bulletin_board_message);
         // 將 JSON 字串存入本地存儲中
         localStorage.setItem('todayPeople', todayPeople_json);
         localStorage.setItem('empty_court_arr', empty_court_arr_json);
         localStorage.setItem('prepare_PK', prepare_PK_json);
         localStorage.setItem('game_record', game_record_json);
+        localStorage.setItem('bulletin_board_message', bulletin_board_message_json);
     }
     function load_data() {
         if (localStorage.getItem('todayPeople') == undefined || localStorage.getItem('empty_court_arr') == undefined || localStorage.getItem('prepare_PK') == undefined) {
@@ -511,6 +530,7 @@
         empty_court_arr = JSON.parse(localStorage.getItem('empty_court_arr'));
         prepare_PK = JSON.parse(localStorage.getItem('prepare_PK'));
         game_record = JSON.parse(localStorage.getItem('game_record'));
+        bulletin_board_message = JSON.parse(localStorage.getItem('bulletin_board_message')) ? JSON.parse(localStorage.getItem('bulletin_board_message')) : [];
         put_todayPeople_to_court()
         return true
     }
@@ -550,17 +570,20 @@
         // 處理輸入
         console.log(input);
         // 將資料轉換為陣列
-        const arr = input.split('\n');
-        const newArr = arr.filter(item => Object.keys(item).length !== 0);
-        // 將陣列中的每個元素轉換為物件
-        const objArr = newArr.map((item, index) => ({ id: index + 1, name: item }));
-        // 輸出轉換後的物件陣列
-        console.log(objArr);
+        const regex = /(\d+)\.\[(\d*)\](.*)/g;
+        const result = [];
+        while ((matches = regex.exec(input)) !== null) {
+            const id = parseInt(matches[1]);
+            const score = matches[2] !== '' ? parseInt(matches[2]) : 0;
+            const name = matches[3].trim();
+            result.push({ id, score, name });
+        }
+        console.log(result);
         todayPeople = []
         prepare_PK = [];
         empty_court_arr = [1, 2, 3, 4];
-        for (let i = 1; i <= objArr.length; i++) {
-            todayPeople.push({ id: i, name: objArr[i - 1].name, score: 500 - i, court: 0, idleRounds: 0, player: 0, partner_id: 0 });
+        for (let i = 1; i <= result.length; i++) {
+            todayPeople.push({ id: i, name: result[i - 1].name, score: result[i - 1].score * 100, court: 0, idleRounds: 0, player: 0, partner_id: 0 });
         }
         for (let i = 1; i < 6; i++) {
             empty_data_to_court(i)
@@ -651,6 +674,7 @@
         show_message(`${todayPeople[binding_1 - 1].name} 與 ${todayPeople[binding_2 - 1].name} 成功綁定`)
         idle_people_update_to_div()
     }
+
     idle_people_update_to_div()
     $("#pickPeople").on("click", pickPeople)
     $("#go_to_pk").on("click", go_to_PK)
@@ -676,17 +700,14 @@
         console.log('connected.');
 
         $("#send_data").click(function () {
-            const data_obj = { todayPeople: todayPeople, game_record: game_record, prepare_PK: prepare_PK }
+            const data_obj = { todayPeople: todayPeople, game_record: game_record, prepare_PK: prepare_PK, bulletin_board_message: bulletin_board_message }
             client.publish('Chill/server/data_refresh', JSON.stringify(data_obj));
         })
         client.publish('Chill/test', "start");
         client.subscribe('Chill/#')
         client.on("message", function (topic, payload) {
-            //   console.log(payload);
             console.log(topic);
-            // var uint8array = new TextEncoder().encode("¢");
             var my_string = new TextDecoder().decode(payload);
-
             if (topic == 'Chill/client/register_personal_data') {
                 const personal_data_obj = JSON.parse(my_string)
                 console.log(personal_data_obj)
@@ -702,7 +723,7 @@
                 }
             }
             if (topic == 'Chill/client/ask_for_data_refresh') {
-                const data_obj = { todayPeople: todayPeople, game_record: game_record, prepare_PK: prepare_PK }
+                const data_obj = { todayPeople: todayPeople, game_record: game_record, prepare_PK: prepare_PK, bulletin_board_message: bulletin_board_message }
                 client.publish('Chill/server/data_refresh', JSON.stringify(data_obj));
             }
         });

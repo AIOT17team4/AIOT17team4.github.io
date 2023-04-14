@@ -109,16 +109,16 @@
                 <h1>即將上場</h1>
                 <table class="table table-bordered court-5 court">
                     <tr>
-                        <td class="player1">1,1</td>
-                        <td class="player4">1,2</td>
+                        <td class="player1"></td>
+                        <td class="player4"></td>
                     </tr>
                     <tr>
                         <td class='net'> </td>
                         <td class='net'> </td>
                     </tr>
                     <tr>
-                        <td class="player2">2,1</td>
-                        <td class="player3">2,2</td>
+                        <td class="player2"></td>
+                        <td class="player3"></td>
                     </tr>
                 </table>
             </div>
@@ -132,6 +132,10 @@
             <div class="col-8">
                 <h1> 閒置人員</h1>
                 <div class="row person-wait"></div>
+                <div id="bulletin_board">
+                    <h1>📰公布欄📰</h1>
+                    <div id="bulletin_board_message"></div>
+                </div>
             </div>
         </div>
         <div class="row">
@@ -156,6 +160,7 @@
     let prepare_PK = [];
     let empty_court_arr = [1, 2, 3, 4];
     let game_record = [];
+    let bulletin_board_message = []
     //這三個變數 每次進來會重置成這樣
     let min_idle = 0;
     let hide_score = '1';
@@ -172,7 +177,7 @@
         }
     }
     function personal_card(person) {
-        return (`${person.name}<br>戰力：${hide_score == 1 ? '???' : person.score}`)
+        return (`${person.name}<br>⚔️：${hide_score == 1 ? '???' : person.score}`)
     }
     function show_player_data_to_court(topTeamPlayers, bottomTeamPlayers, court) {
         //topTeamPlayers, bottomTeamPlayers 都是array 放了兩個選手的資料
@@ -296,7 +301,11 @@
             <tr>
                 <td>${person.idleRounds}</td>
             </tr>
-        </table> 
+            <tr>
+                <td>${person.partner_id == 0 ? '單身狗' : '隊友：' + todayPeople[person.partner_id - 1].name
+            }</td >
+            </tr >
+        </table >
         `)
     }
     function handle_end_game(e) {
@@ -497,6 +506,10 @@
     function handle_edit_off() {
         $("#all_data_area").empty()
     }
+    function refresh_bulletin_board_message() {
+        $("#bulletin_board_message").empty()
+        bulletin_board_message.forEach(obj => $("#bulletin_board_message").prepend(obj))
+    }
     idle_people_update_to_div()
     $("#pickPeople").on("click", pickPeople)
     $("#go_to_pk").on("click", go_to_PK)
@@ -526,9 +539,11 @@
                 todayPeople = data_obj.todayPeople;
                 game_record = data_obj.game_record;
                 prepare_PK = data_obj.prepare_PK;
+                bulletin_board_message = data_obj.bulletin_board_message;
                 put_todayPeople_to_court()
                 idle_people_update_to_div()
                 handle_show_game_record()
+                refresh_bulletin_board_message()
                 if (prepare_PK.length == 4) {
                     show_player_data_to_court([prepare_PK[0], prepare_PK[3]], [prepare_PK[1], prepare_PK[2]], 5)
                 }
