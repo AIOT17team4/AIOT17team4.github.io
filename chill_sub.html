@@ -182,7 +182,7 @@
     }
     function personal_card(person) {
         // <br>⚔️：${hide_score == 1 ? '???' : person.score}
-        return (`${person.name}`)
+        return (`<span style="writing-mode: vertical-rl;">${person.name}<span>`)
     }
     function show_player_data_to_court(topTeamPlayers, bottomTeamPlayers, court) {
         //topTeamPlayers, bottomTeamPlayers 都是array 放了兩個選手的資料
