@@ -157,7 +157,8 @@
                         </select>
                         <select name="binding_partners_2" id="binding_partners_2">
                         </select>
-                        <button id="set_binding">確認執行</button>
+                        <button id="set_binding">確認執行綁定操作</button>
+                        <button id="set_unbinding">確認執行解除綁定操作</button>
                     </fieldset>
                     <fieldset class="simplify_able">
                         <legend>idleRounds設定區</legend>
@@ -189,6 +190,10 @@
                         <select id="simplify_do">
                             <option value="0">不簡化操作流程</option>
                             <option value="1">簡化操作流程</option>
+                        </select>
+                        <select id="off_court_check">
+                            <option value="0">下場不需要確認</option>
+                            <option value="1">下場需要確認</option>
                         </select>
                     </fieldset>
                     <fieldset class="simplify_able">
@@ -238,10 +243,11 @@
     let game_record = [];
     let bulletin_board_message = []
     //這4個變數 每次進來會重置成這樣
-    let simplify = '1';
+    let simplify = '0';
     let min_idle = 0;
     let hide_score = '1';
     let score_count = '0';
+    let off_court_check = '0';
     //產生4個主要比賽場地
     for (let i = 1; i < 5; i++) {
         $(".court-container").append(court_generate(i))
@@ -470,13 +476,25 @@
         const court_number = parseInt(sixthChar, 10); // 將第六個字轉換成數字 (10 代表使用十進制)
         console.log($(`.${court_number}-top-p input`).val())
         console.log($(`.${court_number}-bottom-p input`).val())
+        const top_score = $(`.${court_number}-top-p input`).val()
+        const bottom_score = $(`.${court_number}-bottom-p input`).val()
         if (empty_court_arr.includes(court_number)) {
             alert(`第${court_number}場還是空的 無法結束比賽`)
         }
         else if ($(`.${court_number}-top-p input`).val() == "" || $(`.${court_number}-bottom-p input`).val() == "") {
             alert("請填入比分 在結束比賽")
         } else {
-            off_court(court_number, $(`.${court_number}-top-p input`).val(), $(`.${court_number}-bottom-p input`).val())
+            if (off_court_check == '1') {
+                var confirmed = confirm(`第${court_number}球場的比賽 比分是 ${top_score}比${bottom_score} 確認執行結果嗎？`);
+                if (confirmed) {
+                    off_court(court_number, $(`.${court_number}-top-p input`).val(), $(`.${court_number}-bottom-p input`).val())
+                }
+            } else {
+                off_court(court_number, $(`.${court_number}-top-p input`).val(), $(`.${court_number}-bottom-p input`).val())
+            }
+
+
+
         }
 
     }
@@ -645,6 +663,10 @@
             $(".simplify_able").removeClass("simplify_able_true")
         }
     }
+    function handle_off_court_check_change() {
+        console.log('將 off_court_check 設置為：' + $(this).val())
+        off_court_check = $(this).val()
+    }
     function handle_show_game_record() {
         $("#game_record").empty()
         for (x in game_record) {
@@ -702,6 +724,28 @@
         todayPeople[binding_2 - 1].partner_id = binding_1;
         show_message(`${todayPeople[binding_1 - 1].name} 與 ${todayPeople[binding_2 - 1].name} 成功綁定`)
         idle_people_update_to_div()
+    } function handle_set_unbinding() {
+        const binding_1 = Number($("#binding_partners_1").val())
+        const binding_2 = Number($("#binding_partners_2").val())
+        if (binding_1 == binding_2) {
+            return (alert("需要不同的兩個人才能綁定"))
+        }
+        if (todayPeople[binding_1 - 1].partner_id == 0) {
+            return (alert("第一個人沒有綁定的隊友"))
+        }
+        if (todayPeople[binding_2 - 1].partner_id == 0) {
+            return (alert("第二個人沒有綁定的隊友"))
+        }
+        if (todayPeople[binding_2 - 1].partner_id != binding_1) {
+            return (alert("這兩個人目前不是隊友"))
+        }
+        if (todayPeople[binding_1 - 1].partner_id != binding_2) {
+            return (alert("這兩個人目前不是隊友"))
+        }
+        todayPeople[binding_1 - 1].partner_id = 0;
+        todayPeople[binding_2 - 1].partner_id = 0;
+        show_message(`${todayPeople[binding_1 - 1].name} 與 ${todayPeople[binding_2 - 1].name} 成功解除綁定`)
+        idle_people_update_to_div()
     }
     function speak(text) {
         // 创建 SpeechSynthesisUtterance 对象
@@ -725,10 +769,14 @@
     $("#hide_score").on("change", handle_hide_score_change)
     $("#score_count").on("change", handle_score_count_change)
     $("#simplify_do").on("change", handle_simplify_do_change)
+    $("#off_court_check").on("change", handle_off_court_check_change)
+
     $("#show_game_record").on('click', handle_show_game_record)
     $("#set_personal_record").on('click', handle_set_personal_record)
     $("#set_personal_record").on('click', handle_set_personal_record)
     $("#set_binding").on('click', handle_set_binding)
+    $("#set_unbinding").on('click', handle_set_unbinding)
+
 
 
     var client = mqtt.connect("wss://test.mosquitto.org:8081") // you add a ws:// url here
