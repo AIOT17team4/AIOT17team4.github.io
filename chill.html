@@ -97,6 +97,10 @@
         .json {
             width: 100%;
         }
+
+        .simplify_able_true {
+            visibility: hidden;
+        }
     </style>
 </head>
 
@@ -109,8 +113,10 @@
         <div class="row">
             <div class="col-4">
                 <h1>即將上場人員</h1>
-                <button class="primary" id="pickPeople"> 選人上場</button>
-                <button class="go_to_pk" id="go_to_pk">去？球場比賽</button>
+                <div class="simplify_able">
+                    <button class="primary" id="pickPeople"> 選人上場</button>
+                    <button class="go_to_pk" id="go_to_pk">去？球場比賽</button>
+                </div>
                 <div class="col">
                     <table class="table table-bordered court-5 court">
                         <tr>
@@ -126,12 +132,14 @@
                             <td class="player3">2,2</td>
                         </tr>
                     </table>
-                    <button class="button" id="check-info">檢視資料</button>
-                    <button class="button" id="refresh-idle">刷新閒置人員資料</button>
-                    <button class="button" id="save-data">存資料</button>
-                    <button class="button" id="prepare_to_delete">準備設定人員 </button>
-                    <button class="button" id="send_data">發送資料 </button>
-                    <fieldset>
+                    <div class="simplify_able">
+                        <button class="button" id="check-info">檢視資料</button>
+                        <button class="button" id="refresh-idle">刷新閒置人員資料</button>
+                        <button class="button" id="save-data">存資料</button>
+                        <button class="button" id="prepare_to_delete">準備設定人員 </button>
+                        <button class="button" id="send_data">發送資料 </button>
+                    </div>
+                    <fieldset class="simplify_able">
                         <legend>指定上場設定區</legend>
                         <select name="prepare_PK_set_player" id="prepare_PK_set_player">
                             <option value="1">player1(左上)</option>
@@ -143,7 +151,7 @@
                         </select>
                         <button id="set_prepare_PK">確認執行</button>
                     </fieldset>
-                    <fieldset>
+                    <fieldset class="simplify_able">
                         <legend>綁定組合區</legend>
                         <select name="binding_partners_1" id="binding_partners_1">
                         </select>
@@ -151,7 +159,7 @@
                         </select>
                         <button id="set_binding">確認執行</button>
                     </fieldset>
-                    <fieldset>
+                    <fieldset class="simplify_able">
                         <legend>idleRounds設定區</legend>
                         <select name="idle_round_set" id="idle_round_set">
                             <option value="50">超級回歸</option>
@@ -178,8 +186,12 @@
                             <option value="1">分差*10分</option>
                             <option value="2">分差*20分</option>
                         </select>
+                        <select id="simplify_do">
+                            <option value="0">不簡化操作流程</option>
+                            <option value="1">簡化操作流程</option>
+                        </select>
                     </fieldset>
-                    <fieldset>
+                    <fieldset class="simplify_able">
                         <legend>個人戰績查詢</legend>
                         <select name="personal_record" id="personal_record">
                         </select>
@@ -225,7 +237,8 @@
     let empty_court_arr = [1, 2, 3, 4];
     let game_record = [];
     let bulletin_board_message = []
-    //這三個變數 每次進來會重置成這樣
+    //這4個變數 每次進來會重置成這樣
+    let simplify = '1';
     let min_idle = 0;
     let hide_score = '1';
     let score_count = '0';
@@ -292,7 +305,7 @@
                         <td class="player3"></td>
                     </tr>
                 </table>
-                <button class="gameStart" id="court${court_number}start">比賽開始</button>
+                <button class="gameStart simplify_able" id="court${court_number}start">比賽開始</button>
                 <button class="gameEnd" id="court${court_number}end">比賽結束</button>
                 <table class="analysis-${court_number} analysis" style="width:100%; table-layout:fixed;">
                     <tr>
@@ -405,6 +418,8 @@
             bulletin_board_message.push(`《${prepare_PK[0].name}》 和 《${prepare_PK[3].name}》 VS 《${prepare_PK[1].name}》 和 《${prepare_PK[2].name}》，請至第${PK_court}球場比賽。 [ ${currentTime_hms} ]<br>`)
             client.publish('Chill/PY', `[${prepare_PK[0].name}] 和 [${prepare_PK[3].name}] VS [${prepare_PK[1].name}] 和 [${prepare_PK[2].name}]，請至第${PK_court}球場比賽。`)
             refresh_bulletin_board_message()
+            const speak_text = String(`《${prepare_PK[0].name}》 和 《${prepare_PK[3].name}》 對戰 《${prepare_PK[1].name}》 和 《${prepare_PK[2].name}》，請至第${PK_court}球場比賽。`)
+            speak(speak_text);
             prepare_PK = [];
             empty_data_to_court(5)
             todayPeople.forEach(person => {
@@ -486,6 +501,10 @@
         temp_game_record[6] = new Date();
         game_record.push(temp_game_record)
         idle_people_update_to_div()
+        if (simplify == '1') {
+            go_to_PK()
+            pickPeople()
+        }
     }
     function handle_check_info() {
         console.log(todayPeople)
@@ -617,6 +636,15 @@
         console.log('將 score_count 設置為：' + $(this).val())
         score_count = $(this).val()
     }
+    function handle_simplify_do_change() {
+        console.log('將 simplify 設置為：' + $(this).val())
+        simplify = $(this).val()
+        if (simplify == "1") {
+            $(".simplify_able").addClass("simplify_able_true")
+        } else {
+            $(".simplify_able").removeClass("simplify_able_true")
+        }
+    }
     function handle_show_game_record() {
         $("#game_record").empty()
         for (x in game_record) {
@@ -675,7 +703,14 @@
         show_message(`${todayPeople[binding_1 - 1].name} 與 ${todayPeople[binding_2 - 1].name} 成功綁定`)
         idle_people_update_to_div()
     }
-
+    function speak(text) {
+        // 创建 SpeechSynthesisUtterance 对象
+        var msg = new SpeechSynthesisUtterance();
+        // 设置要朗读的文本
+        msg.text = text;
+        // 播放语音
+        window.speechSynthesis.speak(msg);
+    }
     idle_people_update_to_div()
     $("#pickPeople").on("click", pickPeople)
     $("#go_to_pk").on("click", go_to_PK)
@@ -689,6 +724,7 @@
     $('#set_prepare_PK').on("click", set_prepare_PK)
     $("#hide_score").on("change", handle_hide_score_change)
     $("#score_count").on("change", handle_score_count_change)
+    $("#simplify_do").on("change", handle_simplify_do_change)
     $("#show_game_record").on('click', handle_show_game_record)
     $("#set_personal_record").on('click', handle_set_personal_record)
     $("#set_personal_record").on('click', handle_set_personal_record)
