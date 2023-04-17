@@ -181,7 +181,8 @@
         }
     }
     function personal_card(person) {
-        return (`${person.name}<br>⚔️：${hide_score == 1 ? '???' : person.score}`)
+        // <br>⚔️：${hide_score == 1 ? '???' : person.score}
+        return (`${person.name}`)
     }
     function show_player_data_to_court(topTeamPlayers, bottomTeamPlayers, court) {
         //topTeamPlayers, bottomTeamPlayers 都是array 放了兩個選手的資料
