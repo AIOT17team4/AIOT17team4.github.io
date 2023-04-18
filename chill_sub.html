@@ -9,9 +9,10 @@
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        /* div {
+        div {
             overflow-x: scroll;
-        } */
+        }
+
         .even {
             background-color: rgb(122, 176, 223);
         }
@@ -23,7 +24,7 @@
         .court {
             background-color: rgb(236, 236, 244);
             border: 2px solid white;
-            overflow-x: scroll;
+            /* overflow-x: scroll; */
         }
 
         .row>div {
@@ -218,7 +219,7 @@
     }
     function court_generate(court_number) {
         return (`<div class="col-2">
-            <h2>${court_number}號場地</h2>
+            <h2>${court_number}號場</h2>
                 <table class="table table-bordered court-${court_number} court">
                     <tr>
                         <td class="player1"></td>
