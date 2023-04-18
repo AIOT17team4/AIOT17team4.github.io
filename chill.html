@@ -9,6 +9,14 @@
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+        .even {
+            background-color: rgb(122, 176, 223);
+        }
+
+        .odd {
+            background-color: antiquewhite;
+        }
+
         #message-box {
             position: fixed;
             top: 50px;
@@ -64,12 +72,16 @@
             /* background-color: white; */
         }
 
-        .court-0 {
-            background-color: white;
+        .court-5 {
+            /* background-color: white; */
+            background-color: burlywood;
+
         }
 
         .court-1 {
-            background-color: lightcoral;
+            /* background-color: lightcoral; */
+            background-color: MediumSeaGreen;
+
         }
 
         .court-2 {
@@ -77,11 +89,14 @@
         }
 
         .court-3 {
-            background-color: lightblue;
+            background-color: MediumSeaGreen;
+            /* background-color: lightblue; */
         }
 
         .court-4 {
-            background-color: lightyellow;
+            /* background-color: lightyellow; */
+            background-color: lightgreen;
+
         }
 
         .analysis td {
@@ -519,10 +534,12 @@
         temp_game_record[6] = new Date();
         game_record.push(temp_game_record)
         idle_people_update_to_div()
+        save_data()
         if (simplify == '1') {
             go_to_PK()
             pickPeople()
         }
+        send_data()
     }
     function handle_check_info() {
         console.log(todayPeople)
@@ -671,10 +688,11 @@
         $("#game_record").empty()
         for (x in game_record) {
             let y = game_record.length - x - 1
+            let even_or_odd = y % 2 == 0 ? 'even' : "odd"
             $("#game_record").append(`
-        <tr ><td>${game_record[y][0]}、${game_record[y][3]}</td><td>${game_record[y][1]}、${game_record[y][2]}</td></tr >
-            <tr><td>${game_record[y][4]}</td><td>${game_record[y][5]}</td></tr>
-    `)
+            <tr class='${even_or_odd}'><td>${game_record[y][0]}、${game_record[y][3]}</td><td>${game_record[y][1]}、${game_record[y][2]}</td></tr>
+            <tr class='${even_or_odd}'><td>${game_record[y][4]}</td><td>${game_record[y][5]}</td></tr>
+            `)
         }
     }
     function handle_set_personal_record() {
@@ -724,7 +742,8 @@
         todayPeople[binding_2 - 1].partner_id = binding_1;
         show_message(`${todayPeople[binding_1 - 1].name} 與 ${todayPeople[binding_2 - 1].name} 成功綁定`)
         idle_people_update_to_div()
-    } function handle_set_unbinding() {
+    }
+    function handle_set_unbinding() {
         const binding_1 = Number($("#binding_partners_1").val())
         const binding_2 = Number($("#binding_partners_2").val())
         if (binding_1 == binding_2) {
@@ -754,6 +773,10 @@
         msg.text = text;
         // 播放语音
         window.speechSynthesis.speak(msg);
+    }
+    function send_data() {
+        const data_obj = { todayPeople: todayPeople, game_record: game_record, prepare_PK: prepare_PK, bulletin_board_message: bulletin_board_message }
+        client.publish('Chill/server/data_refresh', JSON.stringify(data_obj));
     }
     idle_people_update_to_div()
     $("#pickPeople").on("click", pickPeople)

@@ -9,13 +9,21 @@
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        div {
+        /* div {
             overflow-x: scroll;
+        } */
+        .even {
+            background-color: rgb(122, 176, 223);
+        }
+
+        .odd {
+            background-color: antiquewhite;
         }
 
         .court {
             background-color: rgb(236, 236, 244);
             border: 2px solid white;
+            overflow-x: scroll;
         }
 
         .row>div {
@@ -474,9 +482,10 @@
         $("#game_record").empty()
         for (x in game_record) {
             let y = game_record.length - x - 1
+            let even_or_odd = y % 2 == 0 ? 'even' : "odd"
             $("#game_record").append(`
-            <tr><td>${game_record[y][0]}、${game_record[y][3]}</td><td>${game_record[y][1]}、${game_record[y][2]}</td></tr>
-            <tr><td>${game_record[y][4]}</td><td>${game_record[y][5]}</td></tr>
+            <tr class='${even_or_odd}'><td>${game_record[y][0]}、${game_record[y][3]}</td><td>${game_record[y][1]}、${game_record[y][2]}</td></tr>
+            <tr class='${even_or_odd}'><td>${game_record[y][4]}</td><td>${game_record[y][5]}</td></tr>
             `)
         }
     }
