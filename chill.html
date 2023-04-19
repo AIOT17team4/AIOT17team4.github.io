@@ -221,8 +221,10 @@
                 </div>
             </div>
             <div class="col-8">
-                <h1> 閒置人員</h1>
+                <h1> 備戰區</h1>
                 <div class="row person-wait"></div>
+                <h1> 休息區</h1>
+                <div class="row person-sleep"></div>
                 <!-- 多行文本輸入框 -->
                 <textarea id="input" rows="5"></textarea>
                 <!-- 按鈕 -->
@@ -460,10 +462,15 @@
         bulletin_board_message.forEach(obj => $("#bulletin_board_message").prepend(obj))
     }
     function idle_people_update_to_div() {
-        const idle_people = todayPeople.filter(obj => obj.court === 0)
+        const idle_people = todayPeople.filter(obj => obj.court === 0).sort((a, b) => b.idleRounds - a.idleRounds)
         $(".person-wait").empty()
         for (x in idle_people) {
-            $(".person-wait").append(idle_personal_card(idle_people[x]))
+            if (idle_people[x].idleRounds < 0) {
+                $(".person-sleep").append(idle_personal_card(idle_people[x]))
+            } else {
+                $(".person-wait").append(idle_personal_card(idle_people[x]))
+            }
+
         }
     }
     function idle_personal_card(person) {
@@ -793,7 +800,6 @@
     $("#score_count").on("change", handle_score_count_change)
     $("#simplify_do").on("change", handle_simplify_do_change)
     $("#off_court_check").on("change", handle_off_court_check_change)
-
     $("#show_game_record").on('click', handle_show_game_record)
     $("#set_personal_record").on('click', handle_set_personal_record)
     $("#set_personal_record").on('click', handle_set_personal_record)

@@ -147,8 +147,10 @@
                 <table id="game_record" class="table-bordered"></table>
             </div>
             <div class="col-8">
-                <h1> 閒置人員</h1>
+                <h1> 備戰區</h1>
                 <div class="row person-wait"></div>
+                <h1> 休息區</h1>
+                <div class="row person-sleep"></div>
                 <div id="bulletin_board">
                     <h1>📰公布欄📰</h1>
                     <div id="bulletin_board_message"></div>
@@ -301,10 +303,14 @@
 
     }
     function idle_people_update_to_div() {
-        const idle_people = todayPeople.filter(obj => obj.court === 0)
+        const idle_people = todayPeople.filter(obj => obj.court === 0).sort((a, b) => b.idleRounds - a.idleRounds)
         $(".person-wait").empty()
         for (x in idle_people) {
-            $(".person-wait").append(idle_personal_card(idle_people[x]))
+            if (idle_people[x].idleRounds < 0) {
+                $(".person-sleep").append(idle_personal_card(idle_people[x]))
+            } else {
+                $(".person-wait").append(idle_personal_card(idle_people[x]))
+            }
         }
     }
     function idle_personal_card(person) {
