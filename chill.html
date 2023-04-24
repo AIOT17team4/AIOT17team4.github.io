@@ -212,6 +212,8 @@
                             <td><input id="bottom_team_score" type="number"></td>
                         </tr>
                         <tr>
+                            <td><button id="delete_record_score" class="btn btn-primary">刪除特定場次紀錄</button></td>
+                            <td></td>
                             <td><button id="record_score" class="btn btn-primary">登記分數</button></td>
                         </tr>
 
@@ -229,9 +231,10 @@
             <div class="col-4">
                 <h1>即將上場人員</h1>
                 <div class="simplify_able">
-                    <button class="primary" id="pickPeople"> 選人上場</button>
-                    <button class="go_to_pk" id="go_to_pk">去？球場比賽</button>
-                    <button id="open_modal_of_record_score" class="btn btn-primary ml-5">登入分數</button>
+                    <button class="btn-primary btn" id="pickPeople"> 選人上場</button>
+                    <button class="go_to_pk btn-primary btn" id="go_to_pk">去？球場比賽</button>
+                    <button id="open_modal_of_record_score" class="btn btn-primary ml-2">登入分數</button>
+                    <span class="wait_to_register_text" id="wait_to_register_text">等待登記場次：</span>
 
 
                 </div>
@@ -292,10 +295,12 @@
                     </fieldset>
                     <fieldset>
                         <legend>環境變數設定區</legend>
-                        最小等待場數:<select name="min_idle" id="min_idle">
-                            <option value="0">0</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
+                        <select name="min_idle" id="min_idle">
+                            <option value="0">最小等待場數:0</option>
+                            <option value="1">最小等待場數:1</option>
+                            <option value="2">最小等待場數:2</option>
+                            <option value="3">最小等待場數:3</option>
+                            <option value="4">最小等待場數:4</option>
                         </select>
                         <select id="hide_score">
                             <option value="1">隱藏分數</option>
@@ -305,14 +310,14 @@
                             <option value="1">分差*10分</option>
                             <option value="2">分差*20分</option>
                         </select>
-                        <select id="simplify_do">
+                        <!-- <select id="simplify_do">
                             <option value="0">不簡化操作流程</option>
                             <option value="1">簡化操作流程</option>
                         </select>
                         <select id="off_court_check">
                             <option value="0">下場不需要確認</option>
                             <option value="1">下場需要確認</option>
-                        </select>
+                        </select> -->
                     </fieldset>
                     <fieldset class="simplify_able">
                         <legend>個人戰績查詢</legend>
@@ -466,6 +471,9 @@
         //將全部人員的資料輸入 
         //先找出不在場比賽的人
         const result = allPlayers.filter(obj => obj.court === 0);
+        if (result.length < 4) {
+            return (alert('人數不足4人 無法匹配人選'))
+        }
         // 找出 idleRounds 最高的人
         const oldestPerson = result.reduce((prev, current) => {
             return (prev.idleRounds > current.idleRounds) ? prev : current;
@@ -519,7 +527,6 @@
         return combinedArray
     }
     function pickPeople() {
-        // console.log(auto_choose_players(todayPeople))
         const pickedPeople = auto_choose_players(todayPeople)
         prepare_PK_refresh(pickedPeople)
         show_player_data_to_court([pickedPeople[0], pickedPeople[3]], [pickedPeople[1], pickedPeople[2]], 5)
@@ -684,6 +691,7 @@
             pickPeople()
         }
         send_data()
+        refresh_wait_to_register_text();
     }
     function off_court(court_number, team_top_score, team_bottom_score) {
         const result = todayPeople.filter(obj => obj.court === court_number);
@@ -818,6 +826,7 @@
             empty_data_to_court(i)
         }
         idle_people_update_to_div()
+        save_data()
     }
     function prepare_to_delete() {
         $("#delete").empty()
@@ -990,6 +999,9 @@
     }
     function handle_go_to_sleep() {
         const choosed_people = todayPeople.filter(obj => obj.choosed == 1)
+        if (choosed_people.length == 0) {
+            return (show_message("沒有選人 操作無效"))
+        }
         choosed_people.forEach(obj => {
             obj.idleRounds = -999;
             obj.choosed = 0;
@@ -998,6 +1010,9 @@
     }
     function handle_go_to_wait() {
         const choosed_people = todayPeople.filter(obj => obj.choosed == 1)
+        if (choosed_people.length == 0) {
+            return (show_message("沒有選人 操作無效"))
+        }
         choosed_people.forEach(obj => {
             obj.idleRounds = 0;
             obj.choosed = 0;
@@ -1054,12 +1069,18 @@
         todayPeople[wait_to_register_list[now_which_game][1] - 1].score -= score_diff * score_diff_scale
         todayPeople[wait_to_register_list[now_which_game][2] - 1].score -= score_diff * score_diff_scale
         todayPeople[wait_to_register_list[now_which_game][3] - 1].score += score_diff * score_diff_scale
+        //設置最低分是100
+        todayPeople[wait_to_register_list[now_which_game][0] - 1].score = todayPeople[wait_to_register_list[now_which_game][3] - 1].score < 100 ? 100 : todayPeople[wait_to_register_list[now_which_game][3] - 1].score
+        todayPeople[wait_to_register_list[now_which_game][1] - 1].score = todayPeople[wait_to_register_list[now_which_game][3] - 1].score < 100 ? 100 : todayPeople[wait_to_register_list[now_which_game][3] - 1].score
+        todayPeople[wait_to_register_list[now_which_game][2] - 1].score = todayPeople[wait_to_register_list[now_which_game][3] - 1].score < 100 ? 100 : todayPeople[wait_to_register_list[now_which_game][3] - 1].score
+        todayPeople[wait_to_register_list[now_which_game][3] - 1].score = todayPeople[wait_to_register_list[now_which_game][3] - 1].score < 100 ? 100 : todayPeople[wait_to_register_list[now_which_game][3] - 1].score
 
         wait_to_register_list.splice(now_which_game, 1)
 
         $('#myModal').modal('hide');
         show_message("完成登記")
         idle_people_update_to_div()
+        refresh_wait_to_register_text()
 
 
     }
@@ -1088,6 +1109,21 @@
         $("#player-4-td").html(todayPeople[wait_to_register_list[now_which_game][3] - 1].name)
     }
 
+    function handle_delete_record_score() {
+        const now_which_game = parseInt($("#which_game").val())
+        const confirmed = confirm(`你確定要刪除${todayPeople[wait_to_register_list[now_which_game][0] - 1].name} & ${todayPeople[wait_to_register_list[now_which_game][3] - 1].name} V.S. ${todayPeople[wait_to_register_list[now_which_game][1] - 1].name} ${todayPeople[wait_to_register_list[now_which_game][2] - 1].name} 這個對局的紀錄嗎？ 一般只在按錯場次上場 趕快按下來 要清除這個錯誤使用！`)
+        if (confirmed) {
+            wait_to_register_list.splice(now_which_game, 1)
+            show_message("成功刪除場次紀錄")
+            $('#myModal').modal('hide');
+            refresh_wait_to_register_text()
+        }
+    }
+
+    function refresh_wait_to_register_text() {
+        $("#wait_to_register_text").html(`等待登記場次: ${wait_to_register_list.length}`)
+    }
+    refresh_wait_to_register_text()
     idle_people_update_to_div()
     $("#pickPeople").on("click", pickPeople)
     $("#go_to_pk").on("click", go_to_PK)
@@ -1117,6 +1153,7 @@
     $("#cancel_choosed").on("click", handle_cancel_choosed)
     $("#record_score").on("click", handle_record_score)
     $("#open_modal_of_record_score").on("click", handle_open_modal_of_record_score)
+    $("#delete_record_score").on("click", handle_delete_record_score)
 
 
 
