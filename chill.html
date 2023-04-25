@@ -7,7 +7,7 @@
     <!-- 引入 Bootstrap 的 CSS 檔案 -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.min.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         .team-color-board {
@@ -230,7 +230,7 @@
         <div class="row">
             <div class="col-4">
                 <h1>即將上場人員</h1>
-                <div class="simplify_able">
+                <div>
                     <button class="btn-primary btn" id="pickPeople"> 選人上場</button>
                     <button class="go_to_pk btn-primary btn" id="go_to_pk">去？球場比賽</button>
                     <button id="open_modal_of_record_score" class="btn btn-primary ml-2">登入分數</button>
@@ -253,7 +253,7 @@
                             <td class="player3 go_here"></td>
                         </tr>
                     </table>
-                    <div class="simplify_able">
+                    <div>
                         <button class="button" id="check-info">檢視資料</button>
                         <button class="button" id="refresh-idle">刷新閒置人員資料</button>
                         <button class="button" id="save-data">存資料</button>
@@ -261,7 +261,7 @@
                         <button class="button" id="send_data">發送資料 </button>
                         <button class="button" id="delete_today_data">刪除本地端當日資料 </button>
                     </div>
-                    <fieldset class="simplify_able">
+                    <fieldset>
                         <legend>指定上場設定區</legend>
                         <select name="prepare_PK_set_player" id="prepare_PK_set_player">
                             <option value="1">player1(左上)</option>
@@ -527,7 +527,10 @@
         return combinedArray
     }
     function pickPeople() {
-        const pickedPeople = auto_choose_players(todayPeople)
+        // const pickedPeople = auto_choose_players(todayPeople)
+        // const pickedPeople = auto_choose_players(todayPeople)
+        const four_people = letsPlay(todayPeople)
+        const pickedPeople = [todayPeople[four_people[0] - 1], todayPeople[four_people[1] - 1], todayPeople[four_people[2] - 1], todayPeople[four_people[3] - 1]]
         prepare_PK_refresh(pickedPeople)
         show_player_data_to_court([pickedPeople[0], pickedPeople[3]], [pickedPeople[1], pickedPeople[2]], 5)
 
@@ -581,6 +584,7 @@
         bulletin_board_message.forEach(obj => $("#bulletin_board_message").prepend(obj))
     }
     function idle_people_update_to_div() {
+        console.log(todayPeople)
         const idle_people = todayPeople.filter(obj => obj.court === 0).sort((a, b) => b.idleRounds - a.idleRounds)
         $(".person-wait").empty()
         $(".person-sleep").empty()
@@ -624,7 +628,6 @@
                         <div class="card-body">
                             <h5 class="card-title">${person.name}</h5>
                             <p class="card-text">${hide_score == 1 ? '???' : person.score}／${person.idleRounds}</p>
-                            <h6 class="team-color">隊伍色</h6>
                         </div>
                     </div>
                     </div>`)
@@ -693,34 +696,34 @@
         send_data()
         refresh_wait_to_register_text();
     }
-    function off_court(court_number, team_top_score, team_bottom_score) {
-        const result = todayPeople.filter(obj => obj.court === court_number);
-        result.forEach(obj => obj.court = 0)
-        empty_data_to_court(court_number)
-        empty_court_arr.push(Number(court_number))
-        const win_point = Number(team_top_score) - Number(team_bottom_score)
-        console.log(win_point)
-        let temp_game_record = ['0', '1', '2', '3', '4', '5', '6']
-        result.forEach(obj => {
-            if (obj.player == 1 || obj.player == 4) {
-                obj.score += (score_count == 0 ? win_point > 0 ? 100 : -100 : score_count == 1 ? 10 * win_point : 20 * win_point)
-            } else {
-                obj.score -= (score_count == 0 ? win_point > 0 ? 100 : -100 : score_count == 1 ? 10 * win_point : 20 * win_point)
-            }
-            temp_game_record[Number(obj.player) - 1] = obj.name
-        })
-        temp_game_record[4] = team_top_score
-        temp_game_record[5] = team_bottom_score
-        temp_game_record[6] = new Date();
-        game_record.push(temp_game_record)
-        idle_people_update_to_div()
-        save_data()
-        if (simplify == '1') {
-            go_to_PK()
-            pickPeople()
-        }
-        send_data()
-    }
+    // function off_court(court_number, team_top_score, team_bottom_score) {
+    //     const result = todayPeople.filter(obj => obj.court === court_number);
+    //     result.forEach(obj => obj.court = 0)
+    //     empty_data_to_court(court_number)
+    //     empty_court_arr.push(Number(court_number))
+    //     const win_point = Number(team_top_score) - Number(team_bottom_score)
+    //     console.log(win_point)
+    //     let temp_game_record = ['0', '1', '2', '3', '4', '5', '6']
+    //     result.forEach(obj => {
+    //         if (obj.player == 1 || obj.player == 4) {
+    //             obj.score += (score_count == 0 ? win_point > 0 ? 100 : -100 : score_count == 1 ? 10 * win_point : 20 * win_point)
+    //         } else {
+    //             obj.score -= (score_count == 0 ? win_point > 0 ? 100 : -100 : score_count == 1 ? 10 * win_point : 20 * win_point)
+    //         }
+    //         temp_game_record[Number(obj.player) - 1] = obj.name
+    //     })
+    //     temp_game_record[4] = team_top_score
+    //     temp_game_record[5] = team_bottom_score
+    //     temp_game_record[6] = new Date();
+    //     game_record.push(temp_game_record)
+    //     idle_people_update_to_div()
+    //     save_data()
+    //     if (simplify == '1') {
+    //         go_to_PK()
+    //         pickPeople()
+    //     }
+    //     send_data()
+    // }
     function handle_check_info() {
         console.log(todayPeople)
         console.log(empty_court_arr)
@@ -1067,14 +1070,19 @@
         const score_diff_scale = score_count == '1' ? 10 : score_count == 2 ? 20 : 10
         //計算分數：
         const score_diff = top_team_score - bottom_team_score
-        todayPeople[wait_to_register_list[now_which_game][0] - 1].score += score_diff * score_diff_scale
-        todayPeople[wait_to_register_list[now_which_game][1] - 1].score -= score_diff * score_diff_scale
-        todayPeople[wait_to_register_list[now_which_game][2] - 1].score -= score_diff * score_diff_scale
-        todayPeople[wait_to_register_list[now_which_game][3] - 1].score += score_diff * score_diff_scale
+        todayPeople[wait_to_register_list[now_which_game][0] - 1].score += (score_diff * score_diff_scale)
+        todayPeople[wait_to_register_list[now_which_game][1] - 1].score += (score_diff * score_diff_scale * -1)
+        todayPeople[wait_to_register_list[now_which_game][2] - 1].score += (score_diff * score_diff_scale * -1)
+        todayPeople[wait_to_register_list[now_which_game][3] - 1].score += (score_diff * score_diff_scale)
+        console.log(todayPeople[wait_to_register_list[now_which_game][0] - 1])
+        console.log(todayPeople[wait_to_register_list[now_which_game][1] - 1])
+        console.log(todayPeople[wait_to_register_list[now_which_game][2] - 1])
+        console.log(todayPeople[wait_to_register_list[now_which_game][3] - 1])
+
         //設置最低分是100
-        todayPeople[wait_to_register_list[now_which_game][0] - 1].score = todayPeople[wait_to_register_list[now_which_game][3] - 1].score < 100 ? 100 : todayPeople[wait_to_register_list[now_which_game][3] - 1].score
-        todayPeople[wait_to_register_list[now_which_game][1] - 1].score = todayPeople[wait_to_register_list[now_which_game][3] - 1].score < 100 ? 100 : todayPeople[wait_to_register_list[now_which_game][3] - 1].score
-        todayPeople[wait_to_register_list[now_which_game][2] - 1].score = todayPeople[wait_to_register_list[now_which_game][3] - 1].score < 100 ? 100 : todayPeople[wait_to_register_list[now_which_game][3] - 1].score
+        todayPeople[wait_to_register_list[now_which_game][0] - 1].score = todayPeople[wait_to_register_list[now_which_game][0] - 1].score < 100 ? 100 : todayPeople[wait_to_register_list[now_which_game][0] - 1].score
+        todayPeople[wait_to_register_list[now_which_game][1] - 1].score = todayPeople[wait_to_register_list[now_which_game][1] - 1].score < 100 ? 100 : todayPeople[wait_to_register_list[now_which_game][1] - 1].score
+        todayPeople[wait_to_register_list[now_which_game][2] - 1].score = todayPeople[wait_to_register_list[now_which_game][2] - 1].score < 100 ? 100 : todayPeople[wait_to_register_list[now_which_game][2] - 1].score
         todayPeople[wait_to_register_list[now_which_game][3] - 1].score = todayPeople[wait_to_register_list[now_which_game][3] - 1].score < 100 ? 100 : todayPeople[wait_to_register_list[now_which_game][3] - 1].score
 
         wait_to_register_list.splice(now_which_game, 1)
@@ -1217,5 +1225,109 @@
             }
         });
     });
+
+</script>
+
+<script>
+    function isOverlap(choice_1, choice_2) {
+        if (choice_1["Rank尾"] < choice_2["Rank頭"] || choice_2["Rank尾"] < choice_1["Rank頭"]) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    function waiting_count(choice, people_ready_fight) {
+        let person_1 = choice['Rank頭'];
+        let person_2 = choice['Rank尾'];
+
+        let team_list = [];
+        for (let i = person_1; i <= person_2; i++) {
+            team_list.push(people_ready_fight[i]['idleRounds']);
+        }
+
+        let temp = 0;
+        for (let i = 0; i < team_list.length; i++) {
+            temp += Math.pow(10, team_list[i]);
+        }
+
+        return temp;
+    }
+    function letsPlay(people_ori) {
+        const people = people_ori.filter(person => person['court'] == 0 && person['idleRounds'] >= 0);
+        let people_ready_fight = people.sort((a, b) => b['score'] - a['score'])
+        console.log('let people_ready_fight', people_ready_fight)
+        console.log('people_ori', people_ori)
+        // step1 取得備戰名單
+        // let people_ready_fight = people.filter(person => person['court'] == 0 && person['idleRounds']>=0); //idleRounds>=0
+        console.log('people_ready_fight', people_ready_fight)
+        let matches = [];
+        // step2 列舉組合
+        for (let i = 0; i < people_ready_fight.length - 3; i++) {
+            matches.push({
+                "1號": people_ready_fight[i]['score'],
+                "2號": people_ready_fight[i + 1]['score'],
+                "3號": people_ready_fight[i + 2]['score'],
+                "4號": people_ready_fight[i + 3]['score'],
+                "戰力": `${(people_ready_fight[i]['score'] + people_ready_fight[i + 3]['score']).toString().padStart(4)} vs ${(people_ready_fight[i + 1]['score'] + people_ready_fight[i + 2]['score']).toString().padStart(4)}`,
+                "總分": people_ready_fight.slice(i, i + 4).reduce((sum, person) => sum + person['score'], 0),
+                "隊伍差": Math.abs((people_ready_fight[i]['score'] + people_ready_fight[i + 3]['score']) - (people_ready_fight[i + 1]['score'] + people_ready_fight[i + 2]['score'])),
+                "標準差": +(math.std(people_ready_fight.slice(i, i + 4).map(person => person['score'])).toFixed(1)),
+                "組內差": people_ready_fight[i]['score'] - people_ready_fight[i + 3]['score'],
+                "Rank頭": i,
+                "Rank尾": i + 3
+            });
+        }
+        console.log('matches', matches)
+        // step3 排序組合
+        let sorted_matches = matches.sort((match1, match2) => match1['標準差'] - match2['標準差']);
+        console.log('sorted_matches', sorted_matches)
+        // step4 組合的組合
+        let solutions = [];
+        for (let i = 0; i < sorted_matches.length - 1; i++) {
+            for (let j = i + 1; j < sorted_matches.length; j++) {
+                if (!isOverlap(sorted_matches[i], sorted_matches[j])) {
+                    solutions.push({
+                        "Choice_1": i,
+                        "Choice_2": j,
+                        "SD_1": sorted_matches[i]['標準差'],
+                        "SD_2": sorted_matches[j]['標準差'],
+                        "SD_ALL": +(sorted_matches[i]['標準差'] + sorted_matches[j]['標準差']).toFixed(1),
+                        "等待數值_1": waiting_count(sorted_matches[i], people_ready_fight),
+                        "等待數值_2": waiting_count(sorted_matches[j], people_ready_fight),
+                        "等待數值_合": waiting_count(sorted_matches[i], people_ready_fight) + waiting_count(sorted_matches[j], people_ready_fight)
+                    });
+                }
+            }
+        }
+        console.log('solutions', solutions)
+        // step5 組合依 總ＳＤ排序
+        const sorted_solutions = solutions.sort((a, b) => a.SD_ALL - b.SD_ALL);
+        console.log('sorted_solutions', sorted_solutions)
+        // step6 找出等待值最大之中，ＳＤ最小的選擇，再選擇其中較小的ＳＤ的隊戰
+        const waiting_max = Math.max(...solutions.map(sol => sol.等待數值_合));
+        console.log("waiting_max", waiting_max)
+        let next_game_players;
+        for (const sol of sorted_solutions) {
+            if (sol.等待數值_合 === waiting_max) {
+                console.log("choice!!")
+                if (sol.SD_1 * 10 - sol.等待數值_1 <= sol.SD_2 * 10 - sol.等待數值_2) {
+                    console.log("choice_1")
+                    next_game_players = sol.Choice_1;
+
+                } else {
+                    console.log("choice_2")
+                    next_game_players = sol.Choice_2;
+                }
+                break;
+            }
+        }
+        const result = [];
+
+        for (let i = sorted_matches[next_game_players]["Rank頭"]; i <= sorted_matches[next_game_players]["Rank尾"]; i++) {
+            result.push(people_ready_fight[i]['id']);
+        }
+        console.log(result)
+        return result
+    }
 
 </script>
