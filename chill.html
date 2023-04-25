@@ -229,14 +229,11 @@
 
         <div class="row">
             <div class="col-4">
-                <h1>即將上場人員</h1>
                 <div>
                     <button class="btn-primary btn" id="pickPeople"> 選人上場</button>
                     <button class="go_to_pk btn-primary btn" id="go_to_pk">去？球場比賽</button>
                     <button id="open_modal_of_record_score" class="btn btn-primary ml-2">登入分數</button>
-                    <span class="wait_to_register_text" id="wait_to_register_text">等待登記場次：</span>
-
-
+                    <span class="wait_to_register_text" id="wait_to_register_text">待登記：</span>
                 </div>
                 <div class="col">
                     <table class="table table-bordered court-5 court">
@@ -245,8 +242,8 @@
                             <td class="player4 go_here"></td>
                         </tr>
                         <tr>
-                            <td class='net'> </td>
-                            <td class='net'> </td>
+                            <td class='net top'> </td>
+                            <td class='net bottom'> </td>
                         </tr>
                         <tr>
                             <td class="player2 go_here"></td>
@@ -314,10 +311,10 @@
                             <option value="1">簡化操作流程</option>
                             <option value="0">不簡化操作流程</option>
                         </select>
-                        <!-- <select id="off_court_check">
+                        <select id="off_court_check">
                             <option value="0">下場不需要確認</option>
                             <option value="1">下場需要確認</option>
-                        </select> -->
+                        </select>
                     </fieldset>
                     <fieldset class="simplify_able">
                         <legend>個人戰績查詢</legend>
@@ -329,7 +326,6 @@
                 </div>
             </div>
             <div class="col-8">
-                <h1> 備戰區</h1>
                 <div class="row person-wait card-container"></div>
                 <h2> 操作按鈕區</h2>
                 <div class="row button-group">
@@ -419,10 +415,9 @@
         $(`.court-${court} .player2`).html(personal_card(bottomTeamPlayers[0]))
         $(`.court-${court} .player3`).html(personal_card(bottomTeamPlayers[1]))
         $(`.court-${court} .player4`).html(personal_card(topTeamPlayers[1]))
-        $(`.analysis-${court} .top`).html(`${topTeamPlayers[0].score + topTeamPlayers[1].score}`)
         $(`.court-${court} .top`).html(`↑：${topTeamPlayers[0].score + topTeamPlayers[1].score}`)
-        $(`.court-${court} .bottom`).html(`↓：${topTeamPlayers[0].score + topTeamPlayers[1].score}`)
-        $(`.analysis-${court} .bottom`).html(`${bottomTeamPlayers[0].score + bottomTeamPlayers[1].score}`)
+        $(`.court-${court} .bottom`).html(`↓：${bottomTeamPlayers[0].score + bottomTeamPlayers[1].score}`)
+
     }
     function empty_data_to_court(court) {
         $(`.court-${court} .player1`).empty()
@@ -660,7 +655,15 @@
         if (empty_court_arr.includes(court_number)) {
             return (alert(`第${court_number}場還是空的 無法結束比賽`))
         }
-        off_court_new(court_number)
+        if (off_court_check == '1') {
+            var confirmed = confirm(`第${court_number}球場的比賽 確認執行結束下場嗎？`);
+            if (confirmed) {
+                off_court_new(court_number)
+            }
+        } else {
+            off_court_new(court_number)
+        }
+
     }
     function off_court_new(court_number) {
         const result = todayPeople.filter(obj => obj.court === court_number);
@@ -1116,7 +1119,7 @@
     }
 
     function refresh_wait_to_register_text() {
-        $("#wait_to_register_text").html(`等待登記場次: ${wait_to_register_list.length}`)
+        $("#wait_to_register_text").html(`待登記: ${wait_to_register_list.length}`)
     }
     function handle_go_here() {
         console.log($(this))
