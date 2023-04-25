@@ -241,16 +241,16 @@
                 <div class="col">
                     <table class="table table-bordered court-5 court">
                         <tr>
-                            <td class="player1"></td>
-                            <td class="player4"></td>
+                            <td class="player1 go_here"></td>
+                            <td class="player4 go_here"></td>
                         </tr>
                         <tr>
                             <td class='net'> </td>
                             <td class='net'> </td>
                         </tr>
                         <tr>
-                            <td class="player2"></td>
-                            <td class="player3"></td>
+                            <td class="player2 go_here"></td>
+                            <td class="player3 go_here"></td>
                         </tr>
                     </table>
                     <div class="simplify_able">
@@ -333,11 +333,11 @@
                 <div class="row person-wait card-container"></div>
                 <h2> 操作按鈕區</h2>
                 <div class="row button-group">
-                    <button id="binding" class="btn btn-primary ml-5">綁定</button>
-                    <button id="go_to_sleep" class="btn btn-primary ml-5">去休息區</button>
-                    <button id="go_to_wait" class="btn btn-primary ml-5">去備戰區</button>
-                    <button id="cancel_binding" class="btn btn-primary ml-5">解除綁定</button>
-                    <button id="cancel_choosed" class="btn btn-primary ml-5">清除選取</button>
+                    <button id="binding" class="btn btn-primary ml-2">綁定</button>
+                    <button id="go_to_sleep" class="btn btn-primary ml-2">去休息區</button>
+                    <button id="go_to_wait" class="btn btn-primary ml-2">去備戰區</button>
+                    <button id="cancel_binding" class="btn btn-primary ml-2">解除綁定</button>
+                    <button id="cancel_choosed" class="btn btn-primary ml-2">清除選取</button>
                 </div>
                 <h1> 休息區</h1>
                 <div class="row person-sleep"></div>
@@ -776,7 +776,9 @@
                 temp_arr.sort((a, b) => a.player - b.player);
                 show_player_data_to_court([temp_arr[0], temp_arr[3]], [temp_arr[1], temp_arr[2]], court)
             }
-
+        }
+        if (prepare_PK.length == 4) {
+            show_player_data_to_court([prepare_PK[0], prepare_PK[3]], [prepare_PK[1], prepare_PK[2]], 5)
         }
     }
     function set_min_idle(e) {
@@ -1123,6 +1125,27 @@
     function refresh_wait_to_register_text() {
         $("#wait_to_register_text").html(`等待登記場次: ${wait_to_register_list.length}`)
     }
+    function handle_go_here() {
+        console.log($(this))
+        const choosed_people = todayPeople.filter(obj => obj.choosed == 1)
+        if (choosed_people.length != 1) {
+            return (show_message('正在選擇的人數必須為"1" 操作才有效'))
+        }
+        if (prepare_PK.length != 4) {
+            return (show_message('必須先按選人 操作才有效'))
+        }
+        const which_player = $(this).hasClass("player1") ? 1 : $(this).hasClass("player2") ? 2 : $(this).hasClass("player3") ? 3 : $(this).hasClass("player4") ? 4 : -1
+        if (which_player == -1) {
+            return (show_message('which_player 不可預期的錯誤'))
+        }
+        prepare_PK[which_player - 1] = choosed_people[0]
+        choosed_people[0].choosed = 0
+        put_todayPeople_to_court()
+        idle_people_update_to_div()
+        show_message("替換成功")
+
+
+    }
     refresh_wait_to_register_text()
     idle_people_update_to_div()
     $("#pickPeople").on("click", pickPeople)
@@ -1154,6 +1177,7 @@
     $("#record_score").on("click", handle_record_score)
     $("#open_modal_of_record_score").on("click", handle_open_modal_of_record_score)
     $("#delete_record_score").on("click", handle_delete_record_score)
+    $(".go_here").click(handle_go_here)
 
 
 
