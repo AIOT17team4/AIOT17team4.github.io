@@ -303,18 +303,18 @@
                             <option value="4">最小等待場數:4</option>
                         </select>
                         <select id="hide_score">
-                            <option value="1">隱藏分數</option>
                             <option value="0">顯示分數</option>
+                            <option value="1">隱藏分數</option>
                         </select>
                         <select id="score_count">
                             <option value="1">分差*10分</option>
                             <option value="2">分差*20分</option>
                         </select>
-                        <!-- <select id="simplify_do">
-                            <option value="0">不簡化操作流程</option>
+                        <select id="simplify_do">
                             <option value="1">簡化操作流程</option>
+                            <option value="0">不簡化操作流程</option>
                         </select>
-                        <select id="off_court_check">
+                        <!-- <select id="off_court_check">
                             <option value="0">下場不需要確認</option>
                             <option value="1">下場需要確認</option>
                         </select> -->
@@ -378,9 +378,9 @@
     let binding_team_list = []
     let wait_to_register_list = []
     //這4個變數 每次進來會重置成這樣
-    let simplify = '0';
+    let simplify = '1';
     let min_idle = 0;
-    let hide_score = '1';
+    let hide_score = '0';
     let score_count = '1';
     let off_court_check = '0';
     //產生4個主要比賽場地
@@ -420,6 +420,8 @@
         $(`.court-${court} .player3`).html(personal_card(bottomTeamPlayers[1]))
         $(`.court-${court} .player4`).html(personal_card(topTeamPlayers[1]))
         $(`.analysis-${court} .top`).html(`${topTeamPlayers[0].score + topTeamPlayers[1].score}`)
+        $(`.court-${court} .top`).html(`↑：${topTeamPlayers[0].score + topTeamPlayers[1].score}`)
+        $(`.court-${court} .bottom`).html(`↓：${topTeamPlayers[0].score + topTeamPlayers[1].score}`)
         $(`.analysis-${court} .bottom`).html(`${bottomTeamPlayers[0].score + bottomTeamPlayers[1].score}`)
     }
     function empty_data_to_court(court) {
@@ -427,8 +429,8 @@
         $(`.court-${court} .player2`).empty()
         $(`.court-${court} .player3`).empty()
         $(`.court-${court} .player4`).empty()
-        $(`.analysis-${court} .top`).empty()
-        $(`.analysis-${court} .bottom`).empty()
+        $(`.court-${court} .top`).empty()
+        $(`.court-${court} .bottom`).empty()
     }
     function court_generate(court_number) {
         return (`<div class="col-sm">
@@ -438,8 +440,8 @@
                         <td class="player4"></td>
                     </tr>
                     <tr>
-                        <td class='net'> </td>
-                        <td class='net'> </td>
+                        <td class='net top'> </td>
+                        <td class='net bottom'> </td>
                     </tr>
                     <tr>
                         <td class="player2"></td>
@@ -448,23 +450,6 @@
                 </table>
                 <button class="gameStart simplify_able" id="court${court_number}start">比賽開始</button>
                 <button class="gameEnd" id="court${court_number}end">比賽結束</button>
-                <table class="analysis-${court_number} analysis" style="width:100%; table-layout:fixed;">
-                    <tr>
-                        <th>戰鬥分析</th>
-                        <th>戰力指數</th>
-                        <th>實際比分</th>
-                    </tr>
-                    <tr>
-                        <td>上方</td>
-                        <td class="top"></td>
-                        <td class="${court_number}-top-p"> <input style="width:80%"/></td>
-                    </tr>
-                    <tr>
-                        <td>下方</td>
-                        <td class="bottom"></td>
-                        <td class="${court_number}-bottom-p"> <input style="width:80%"/></td>
-                    </tr>
-                </table>
             </div>`)
     }
     function auto_choose_players(allPlayers) {
@@ -862,11 +847,11 @@
     function handle_simplify_do_change() {
         console.log('將 simplify 設置為：' + $(this).val())
         simplify = $(this).val()
-        if (simplify == "1") {
-            $(".simplify_able").addClass("simplify_able_true")
-        } else {
-            $(".simplify_able").removeClass("simplify_able_true")
-        }
+        // if (simplify == "1") {
+        //     $(".simplify_able").addClass("simplify_able_true")
+        // } else {
+        //     $(".simplify_able").removeClass("simplify_able_true")
+        // }
     }
     function handle_off_court_check_change() {
         console.log('將 off_court_check 設置為：' + $(this).val())
