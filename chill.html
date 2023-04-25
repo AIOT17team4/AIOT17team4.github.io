@@ -409,14 +409,17 @@
     function show_player_data_to_court(topTeamPlayers, bottomTeamPlayers, court) {
         //topTeamPlayers, bottomTeamPlayers 都是array 放了兩個選手的資料
         //court 是 int 表示第幾場次
-        console.log(topTeamPlayers)
-        console.log("flag")
         $(`.court-${court} .player1`).html(personal_card(topTeamPlayers[0]))
         $(`.court-${court} .player2`).html(personal_card(bottomTeamPlayers[0]))
         $(`.court-${court} .player3`).html(personal_card(bottomTeamPlayers[1]))
         $(`.court-${court} .player4`).html(personal_card(topTeamPlayers[1]))
         $(`.court-${court} .top`).html(`↑：${topTeamPlayers[0].score + topTeamPlayers[1].score}`)
         $(`.court-${court} .bottom`).html(`↓：${bottomTeamPlayers[0].score + bottomTeamPlayers[1].score}`)
+        if (court == 5) {
+            const id_list = [topTeamPlayers[0].id, topTeamPlayers[1].id, bottomTeamPlayers[0].id, bottomTeamPlayers[1].id,]
+            $(".team-color-board").removeClass('team-color-3')
+            id_list.forEach(obj => $(`#${obj}`).addClass('team-color-3'))
+        }
 
     }
     function empty_data_to_court(court) {
@@ -426,6 +429,9 @@
         $(`.court-${court} .player4`).empty()
         $(`.court-${court} .top`).empty()
         $(`.court-${court} .bottom`).empty()
+        if (court == 5) {
+            $(".team-color-board").removeClass('team-color-3')
+        }
     }
     function court_generate(court_number) {
         return (`<div class="col-sm">
@@ -585,23 +591,6 @@
         $(".selectable").click(handle_personal_card_click)
     }
     function idle_personal_card(person) {
-        // return (`
-        // <table class='personal_table table-bordered personal-card-${person.id} personal-card ${person.choosed == '1' ? 'choosed' : 'no-choosed'}' id='${person.id}'> 
-        //     <tr>
-        //         <td>${person.name}</td>
-        //     </tr>
-        //     <tr>
-        //         <td>${hide_score == 1 ? '???' : person.score}</td>
-        //     </tr>
-        //     <tr>
-        //         <td>${person.idleRounds}</td>
-        //     </tr>
-        //     <tr>
-        //         <td>${person.partner_id == 0 ? '單身狗' : '隊友：' + todayPeople[person.partner_id - 1].name}
-        //             </td >
-        //     </tr >
-        // </table >
-        // `)
         return (`
         <div class='col-md-2'>
         <div class="card selectable team-color-board" id='${person.id}'>
@@ -1136,8 +1125,9 @@
         }
         prepare_PK[which_player - 1] = choosed_people[0]
         choosed_people[0].choosed = 0
-        put_todayPeople_to_court()
         idle_people_update_to_div()
+        put_todayPeople_to_court()
+
         show_message("替換成功")
 
 
