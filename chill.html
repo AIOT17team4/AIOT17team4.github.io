@@ -8,7 +8,16 @@
     <script src="https://unpkg.com/mqtt/dist/mqtt.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.min.js"></script>
+    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+
+    <!-- Add the Firebase Analytics SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+
+    <!-- Add the Firebase Realtime Database SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
     <style>
         .team-color-board {
             border: 3px solid rgb(115, 104, 104);
@@ -234,6 +243,7 @@
                     <button class="go_to_pk btn-primary btn" id="go_to_pk">去？球場比賽</button>
                     <button id="open_modal_of_record_score" class="btn btn-primary ml-2">登入分數</button>
                     <span class="wait_to_register_text" id="wait_to_register_text">待登記：</span>
+                    <button class="go_to_pk btn-primary btn" id="upload_data_to_firebase">上傳雲端</button>
                 </div>
                 <div class="col">
                     <table class="table table-bordered court-5 court">
@@ -1132,6 +1142,20 @@
 
 
     }
+    function handle_upload_data_to_firebase() {
+        //prepare data
+        const todayPeople_json = JSON.stringify(todayPeople);
+        const empty_court_arr_json = JSON.stringify(empty_court_arr);
+        const prepare_PK_json = JSON.stringify(prepare_PK);
+        const game_record_json = JSON.stringify(game_record);
+        const bulletin_board_message_json = JSON.stringify(bulletin_board_message);
+        let today = new Date();
+        let month = String(today.getMonth() + 1).padStart(2, '0');
+        let date = String(today.getDate()).padStart(2, '0');
+        let currentDate = month + date;
+        write_today_data_to_firebase(todayPeople_json, game_record_json, bulletin_board_message_json, currentDate);
+    }
+
     refresh_wait_to_register_text()
     idle_people_update_to_div()
     $("#pickPeople").on("click", pickPeople)
@@ -1165,9 +1189,41 @@
     $("#delete_record_score").on("click", handle_delete_record_score)
     $(".go_here").click(handle_go_here)
 
+    $("#upload_data_to_firebase").click(handle_upload_data_to_firebase)
 
 
 
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCCLXKg7Ru5p5dtgyRs28-qg8LQaG69yME",
+        // authDomain: "friendly-sensor-137111.firebaseapp.com",
+        databaseURL: "https://friendly-sensor-137111-default-rtdb.firebaseio.com",
+        projectId: "friendly-sensor-137111",
+        storageBucket: "friendly-sensor-137111.appspot.com",
+        // messagingSenderId: "824581584416",
+        appId: "1:824581584416:web:fdd5462dd85230d8caae45",
+        measurementId: "G-2HYJ96RDLV"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+    // 獲取資料庫的引用
+    var database = firebase.database();
+    function write_today_data_to_firebase(today_people_data, game_record_data, bulletin_board_message_data, today_date) {
+        database.ref(`Chung_Shan_elementary_school/Tuesday/date_${today_date}/`).set({
+            today_people: today_people_data,
+            game_record: game_record_data,
+            bulletin_board_message: bulletin_board_message_data
+        }).then((result) => {
+            console.log("成功的結果：", result);
+            if (result == undefined) {
+                show_message("寫入資料成功")
+            }
+        })
+            .catch((error) => {
+                console.log("發生錯誤：", error);
+            });
+    }
 
     var client = mqtt.connect("wss://test.mosquitto.org:8081") // you add a ws:// url here
 
